@@ -1,0 +1,21 @@
+.form__group {
+  // margin-bottom: 1rem;
+
+  &--avatar {
+    // optional styling
+  }
+}
+
+.form__input {
+  text-align: right;
+
+  &--file {
+    display: none;
+  }
+}
+
+.form__filename {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #555;
+}

@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src", // Set the base directory for absolute imports
+    "paths": {
+      "@/*": ["./*"], // Alias for the `src` directory
+      "features/*": ["features/*"],
+      "components/*": ["components/*"],
+      "layouts/*": ["layouts/*"],
+      "pages/*": ["pages/*"],
+      "routes/*": ["routes/*"],
+      "store/*": ["store/*"],
+      "styles/*": ["styles/*"],
+      "theme/*": ["theme/*"],
+      "utils/*": ["utils/*"],
+      "validations/*": ["validations/*"]
+    },
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"]
+}

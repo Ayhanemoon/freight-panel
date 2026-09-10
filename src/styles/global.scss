@@ -1,0 +1,32 @@
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('@/assets/Fonts/webfonts/IRANYekanX-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('@/assets/Fonts/webfonts/IRANYekanX-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--mui-font-family); // Use MUI font family
+  background-color: var(--mui-palette-background-default); // Use MUI background color
+  color: var(--mui-palette-text-primary); // Use MUI primary text color
+  direction: rtl; // Set global direction to RTL
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--mui-palette-primary-main); // Use MUI primary color
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

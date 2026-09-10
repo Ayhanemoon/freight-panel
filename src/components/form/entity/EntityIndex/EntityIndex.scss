@@ -1,0 +1,38 @@
+.entity-index {
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    
+    &__title {
+      color: #123458;
+      font-weight: 600;
+    }
+  }
+  
+  &__filter {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 1rem; 
+    margin-bottom: 0.5rem;
+    
+    &--expand {
+      opacity: 1;
+      transition: all 0.3s ease;
+      
+    }
+    
+    &--collapsed {
+      max-height: 0;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+  }
+}
+
+.MuiTablePagination-displayedRows {
+  direction: ltr;
+  display: none;
+}

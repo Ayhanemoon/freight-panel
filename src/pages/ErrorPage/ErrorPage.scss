@@ -1,0 +1,24 @@
+.error-page {
+  text-align: center;
+  margin-top: 50px;
+
+  h1 {
+      font-size: 2rem;
+      color: #ff6b6b;
+  }
+
+  p {
+      margin: 1rem 0;
+      color: #555;
+  }
+
+  &__link {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: bold;
+
+      &:hover {
+          text-decoration: underline;
+      }
+  }
+}

@@ -1,0 +1,14 @@
+.form__group {
+  
+}
+
+.form__input--switch {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  align-items: center;
+
+  .form__label {
+    margin-inline-start: 0.5rem;
+  }
+}

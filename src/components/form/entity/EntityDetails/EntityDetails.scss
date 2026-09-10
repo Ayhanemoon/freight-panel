@@ -1,0 +1,32 @@
+.entity-details {
+  padding: 2rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--mui-palette-primary-main);
+    border-radius: 5px;
+    
+    &__title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #fff;
+    }
+    
+    &__actions {
+      display: flex;
+      gap: 1rem;
+    }
+  }
+
+  &__card {
+    margin-bottom: 1.5rem;
+  }
+
+  &__field {
+    font-size: 1rem;
+  }
+
+}
