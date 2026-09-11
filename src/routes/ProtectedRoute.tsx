@@ -8,9 +8,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { accessToken, expirationDate } = useTypedSelector((state) => state.auth);
+  const { access, access_expires_at } = useTypedSelector((state) => state.auth);
 
-  if (!accessToken || isTokenExpired(expirationDate)) {
+  if (!access || isTokenExpired(access_expires_at)) {
     return <Navigate to="/auth" replace />;
   }
 

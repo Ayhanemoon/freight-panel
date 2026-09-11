@@ -10,7 +10,7 @@ import { TextField, Button, CircularProgress } from '@mui/material';
 import './LoginForm.scss';
 
 interface LoginFormInputs {
-  username: string;
+  mobile: string;
   password: string;
 }
 
@@ -44,9 +44,9 @@ const LoginForm: React.FC = () => {
           label="نام کاربری"
           variant="outlined"
           fullWidth
-          {...register('username')}
-          error={!!errors.username}
-          helperText={errors.username?.message}
+          {...register('mobile')}
+          error={!!errors.mobile}
+          helperText={errors.mobile?.message}
         />
       </div>
       <div className="login-form__field">

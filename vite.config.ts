@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       port: parseInt(env.VITE_PORT) || 3000, // Development server port from env
       proxy: {
         '/api': {
-          target: env.VITE_BACKEND_URL || 'http://localhost:5000', // Backend server URL from env
+          target: env.VITE_BACKEND_URL || 'http://localhost:8000', // Backend server URL from env
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''), // Remove '/api' prefix when forwarding
         },

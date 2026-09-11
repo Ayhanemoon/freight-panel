@@ -1,19 +1,21 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
-  accessToken: string | null;
-  refreshToken: string | null;
-  expirationDate: string | null;
-  isAuthenticated: boolean;
-  user: { id: string; name: string; email: string } | null;
+  access: string | null;
+  refresh: string | null;
+  access_expires_at: string | null;
+  refresh_expires_at: string | null;
+  user_id: string | null;
+  mobile: string | null;
 }
 
 const initialState: AuthState = {
-  accessToken: localStorage.getItem('accessToken'),
-  refreshToken: localStorage.getItem('refreshToken'),
-  expirationDate: localStorage.getItem('expirationDate'),
-  isAuthenticated: !!localStorage.getItem('accessToken'),
-  user: null,
+  access: localStorage.getItem('access'),
+  refresh: localStorage.getItem('refresh'),
+  access_expires_at: localStorage.getItem('access_expires_at'),
+  refresh_expires_at: localStorage.getItem('refresh_expires_at'),
+  user_id: localStorage.getItem('user_id'),
+  mobile: localStorage.getItem('mobile'),
 };
 
 const authSlice = createSlice({
@@ -23,35 +25,45 @@ const authSlice = createSlice({
     setCredentials: (
       state,
       action: PayloadAction<{
-        accessToken: string;
-        refreshToken: string;
-        expirationDate: string;
-        user: { id: string; name: string; email: string };
+        access: string;
+        refresh: string;
+        access_expires_at: string;
+        refresh_expires_at: string;
+        user_id: string;
+        mobile: string;
       }>
     ) => {
-      const { accessToken, refreshToken, expirationDate, user } = action.payload;
-      state.accessToken = accessToken;
-      state.refreshToken = refreshToken;
-      state.expirationDate = expirationDate;
-      state.isAuthenticated = true;
-      state.user = user;
+      const { access, refresh, access_expires_at, refresh_expires_at, user_id, mobile } = action.payload;
+      state.access = access;
+      state.refresh = refresh;
+      state.access_expires_at = access_expires_at;
+      state.refresh_expires_at = refresh_expires_at;
+      state.user_id = user_id;
+      state.mobile = mobile;
 
       // Save tokens and expiration date to localStorage
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('expirationDate', expirationDate);
+      localStorage.setItem('access', access);
+      localStorage.setItem('refresh', refresh);
+      localStorage.setItem('access_expires_at', access_expires_at);
+      localStorage.setItem('refresh_expires_at', refresh_expires_at);
+      localStorage.setItem('user_id', user_id);
+      localStorage.setItem('mobile', mobile);
     },
     logout: (state) => {
-      state.accessToken = null;
-      state.refreshToken = null;
-      state.expirationDate = null;
-      state.isAuthenticated = false;
-      state.user = null;
+      state.access = null;
+      state.refresh = null;
+      state.access_expires_at = null;
+      state.refresh_expires_at = null;
+      state.user_id = null;
+      state.mobile = null;
 
       // Remove tokens and expiration date from localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('expirationDate');
+      localStorage.removeItem('access');
+      localStorage.removeItem('refresh');
+      localStorage.removeItem('access_expires_at');
+      localStorage.removeItem('refresh_expires_at');
+      localStorage.removeItem('user_id');
+      localStorage.removeItem('mobile');
     },
   },
 });

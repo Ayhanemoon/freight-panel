@@ -5,7 +5,7 @@ export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (credentials) => ({
-        url: 'auth/login',
+        url: 'accounts/api/v1/jwt/create/',
         method: 'POST',
         body: credentials,
       }),
@@ -15,10 +15,12 @@ export const authApi = api.injectEndpoints({
           // Dispatch setCredentials to update the store and localStorage
           dispatch(
             setCredentials({
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken,
-              expirationDate: data.expirationDate,
-              user: data.user,
+              access: data.access,
+              refresh: data.refresh,
+              access_expires_at: data.access_expires_at,
+              refresh_expires_at: data.refresh_expires_at,
+              user_id: data.user_id,
+              mobile: data.mobile,
             })
           );
         } catch (error) {
@@ -45,10 +47,12 @@ export const authApi = api.injectEndpoints({
           // Dispatch setCredentials to update the store and localStorage
           dispatch(
             setCredentials({
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken,
-              expirationDate: data.expirationDate,
-              user: data.user,
+              access: data.access,
+              refresh: data.refresh,
+              access_expires_at: data.access_expires_at,
+              refresh_expires_at: data.refresh_expires_at,
+              user_id: data.user_id,
+              mobile: data.mobile,
             })
           );
         } catch (error) {

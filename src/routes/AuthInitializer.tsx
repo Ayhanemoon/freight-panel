@@ -13,25 +13,30 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-      const refreshToken = localStorage.getItem('refreshToken');
-      const expirationDate = localStorage.getItem('expirationDate');
+      const access = localStorage.getItem('accessToken');
+      const refresh = localStorage.getItem('refreshToken');
+      const access_expires_at = localStorage.getItem('access_expires_at');
+      const refresh_expires_at = localStorage.getItem('refresh_expires_at');
+      const user_id = localStorage.getItem('user_id');
+      const mobile = localStorage.getItem('mobile');
 
-      if (accessToken && expirationDate) {
-        if (isTokenExpired(expirationDate)) {
-          if (refreshToken) {
+      if (access && access_expires_at) {
+        if (isTokenExpired(access_expires_at)) {
+          if (refresh) {
             try {
               // Attempt to refresh the token
-                const response = await refreshAuthToken(refreshToken).unwrap();
+                const response = await refreshAuthToken(refresh).unwrap();
 
               if (response.ok) {
                 const data = response;
                 dispatch(
                   setCredentials({
-                    accessToken: data.accessToken,
-                    refreshToken: data.refreshToken,
-                    expirationDate: data.expirationDate,
-                    user: JSON.parse(localStorage.getItem('user') || '{}'),
+                    access: data.access,
+                    refresh: data.refresh,
+                    access_expires_at: data.access_expires_at,
+                    refresh_expires_at: data.refresh_expires_at,
+                    user_id: data.user_id,
+                    mobile: data.mobile,
                   })
                 );
               } else {
@@ -50,10 +55,12 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
           // Token is valid, set it in the Redux store
           dispatch(
             setCredentials({
-              accessToken,
-              refreshToken: refreshToken || '',
-              expirationDate,
-              user: JSON.parse(localStorage.getItem('user') || '{}'),
+              access: access || '',
+              refresh: refresh || '',
+              access_expires_at: access_expires_at || '',
+              refresh_expires_at: refresh_expires_at || '',
+              user_id: user_id || '',
+              mobile: mobile || '',
             })
           );
         }

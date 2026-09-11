@@ -4,23 +4,25 @@ import { isTokenExpired } from 'utils/authUtils';
 
 export const authMiddleware: Middleware = (store) => (next) => async (action) => {
   const state = store.getState();
-  const { accessToken, refreshToken, expirationDate } = state.auth;
+  const { access, refresh, access_expires_at, refresh_expires_at, user_id, mobile } = state.auth;
 
   // Check if the access token is expired
-  if (accessToken && isTokenExpired(expirationDate)) {
-    if (refreshToken) {
+  if (access && isTokenExpired(access_expires_at)) {
+    if (refresh) {
       try {
         // Call the refresh token API
-        const refreshResponse = await store.dispatch(refreshToken({ refreshToken }));
+        const refreshResponse = await store.dispatch(refresh({ refresh }));
 
         if (refreshResponse.ok) {
           const data = await refreshResponse.json();
           store.dispatch(
             setCredentials({
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken,
-              expirationDate: data.expirationDate,
-              user: state.auth.user, // Keep the current user
+              access: data.access,
+              refresh: data.refresh,
+              access_expires_at: data.access_expires_at,
+              refresh_expires_at: data.refresh_expires_at,
+              user_id: data.user_id,
+              mobile: data.mobile,
             })
           );
         } else {

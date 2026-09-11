@@ -3,16 +3,16 @@ import api from 'features/api/api';
 export const userApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query({
-      query: () => 'users',
+      query: () => 'accounts/api/v1/users/',
       providesTags: ['User'],
     }),
     getUserById: builder.query({
-      query: (id) => `users/${id}`,
+      query: (id) => `accounts/api/v1/users/${id}`,
       providesTags: (result, error, id) => [{ type: 'User', id }],
     }),
     createUser: builder.mutation({
       query: (newUser) => ({
-        url: 'users',
+        url: 'accounts/api/v1/users/',
         method: 'POST',
         body: newUser,
       }),
