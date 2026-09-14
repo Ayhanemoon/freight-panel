@@ -30,14 +30,14 @@ export const authApi = api.injectEndpoints({
     }),
     logout: builder.mutation({
       query: () => ({
-        url: 'auth/logout',
+        url: 'accounts/api/v1/token/logout/',
         method: 'POST',
       }),
       invalidatesTags: ['Auth'],
     }),
     refreshAuthToken: builder.mutation({
       query: (refreshToken) => ({
-        url: 'auth/refresh',
+        url: 'accounts/api/v1/jwt/refresh/',
         method: 'POST',
         body: { refreshToken },
       }),

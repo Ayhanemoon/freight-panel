@@ -25,9 +25,9 @@ const api = createApi({
     baseUrl: process.env.VITE_API_BASE_URL || '/api',
     prepareHeaders: (headers) => {
       // Get the token from localStorage
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
+      const accessToken  = localStorage.getItem('access');
+      if (accessToken) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
       }
       return headers;
     },
