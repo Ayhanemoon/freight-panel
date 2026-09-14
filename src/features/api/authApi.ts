@@ -1,18 +1,37 @@
 import api from 'features/api/api';
 import { setCredentials } from 'features/auth/authSlice';
 
+interface LoginCredentials {
+  mobile: string;
+  password: string;
+}
+
+interface AuthResponse {
+  access: string;
+  refresh: string;
+  access_expires_at: string;
+  refresh_expires_at: string;
+  user_id: string;
+  mobile: string;
+}
+
+interface RefreshResponse {
+  access: string;
+}
+
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    login: builder.mutation({
+    login: builder.mutation<AuthResponse, LoginCredentials>({
       query: (credentials) => ({
         url: 'accounts/api/v1/jwt/create/',
         method: 'POST',
         body: credentials,
       }),
-      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          // Dispatch setCredentials to update the store and localStorage
+
           dispatch(
             setCredentials({
               access: data.access,
@@ -28,39 +47,20 @@ export const authApi = api.injectEndpoints({
         }
       },
     }),
-    logout: builder.mutation({
-      query: () => ({
-        url: 'accounts/api/v1/token/logout/',
-        method: 'POST',
-      }),
-      invalidatesTags: ['Auth'],
-    }),
-    refreshAuthToken: builder.mutation({
+
+    refreshAuthToken: builder.mutation<RefreshResponse, string>({
       query: (refreshToken) => ({
         url: 'accounts/api/v1/jwt/refresh/',
         method: 'POST',
-        body: { refreshToken },
+        body: {
+          refresh: refreshToken,
+        },
       }),
-      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        try {
-          const { data } = await queryFulfilled;
-          // Dispatch setCredentials to update the store and localStorage
-          dispatch(
-            setCredentials({
-              access: data.access,
-              refresh: data.refresh,
-              access_expires_at: data.access_expires_at,
-              refresh_expires_at: data.refresh_expires_at,
-              user_id: data.user_id,
-              mobile: data.mobile,
-            })
-          );
-        } catch (error) {
-          console.error('Token refresh failed:', error);
-        }
-      },
     }),
   }),
 });
 
-export const { useLoginMutation, useLogoutMutation, useRefreshAuthTokenMutation } = authApi;
+export const {
+  useLoginMutation,
+  useRefreshAuthTokenMutation,
+} = authApi;
