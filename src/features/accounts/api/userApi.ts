@@ -1,5 +1,9 @@
 import baseApi from 'shared/api/baseApi';
 import { PaginatedResponse } from 'shared/types/api';
+import {
+  buildQueryString,
+  ListQueryParams,
+} from 'shared/api/queryParams';
 
 interface User {
   id: number;
@@ -17,8 +21,9 @@ interface User {
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<PaginatedResponse<User>, void>({
-      query: () => 'accounts/api/v1/users/',
+    getUsers: builder.query<PaginatedResponse<User>,ListQueryParams | undefined>({
+      query: (params) =>
+        `accounts/api/v1/users/${buildQueryString(params)}`,
       providesTags: ['User'],
     }),
 
