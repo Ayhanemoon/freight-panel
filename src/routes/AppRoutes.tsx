@@ -10,6 +10,7 @@ import AuthLayout from '@/layouts/AuthLayout/AuthLayout';
 import { RootState, useTypedSelector } from 'store/store'
 import ErrorBoundary from '@/components/hoc/ErrorBoundary';
 import NotFoundPage from 'pages/NotFoundPage/NotFoundPage';
+import UsersTestPage from 'features/accounts/pages/UsersTestPage';
 import FormBuilder from '@/components/form/formBuilder/FormBuilder';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -97,7 +98,7 @@ const isAuthenticated =
                                 element={<DashboardLayout /> }
                             >
                                 <Route index element={<DashboardPage />} />
-                                <Route path="users/*" element={<FormBuilder entity="users" />} />
+                                <Route path="users" element={<UsersTestPage />} />
                             </Route>
 
                             {/* Error Page */}

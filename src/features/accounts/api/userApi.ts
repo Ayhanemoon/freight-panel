@@ -1,17 +1,23 @@
 import baseApi from 'shared/api/baseApi';
+import { PaginatedResponse } from 'shared/types/api';
 
 interface User {
-  id: string;
+  id: number;
   mobile: string;
-  first_name?: string;
-  last_name?: string;
-  is_active?: boolean;
-  is_mobile_verified?: boolean;
+  email: string;
+  branch: number | null;
+  branch_name: string | null;
+  is_active: boolean;
+  is_mobile_verified: boolean;
+  auth_provider: string;
+  created_at: string;
+  updated_at: string;
 }
+
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<User[], void>({
+    getUsers: builder.query<PaginatedResponse<User>, void>({
       query: () => 'accounts/api/v1/users/',
       providesTags: ['User'],
     }),
