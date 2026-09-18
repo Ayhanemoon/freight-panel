@@ -1,5 +1,5 @@
 import baseApi from 'shared/api/baseApi';
-import { setCredentials } from 'features/auth/authSlice';
+import { setCredentials } from 'features/accounts/state/authSlice';
 
 interface LoginCredentials {
   mobile: string;

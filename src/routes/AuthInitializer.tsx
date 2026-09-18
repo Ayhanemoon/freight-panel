@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { setCredentials, logout } from 'features/auth/authSlice';
+import { setCredentials, logout } from 'features/accounts/state/authSlice';
 import { useRefreshAuthTokenMutation } from 'features/accounts/api/authApi';
 import { isTokenExpired } from 'utils/authUtils';
 
