@@ -1,15 +1,10 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { ApiErrorResponse } from 'shared/types/api';
 
 export interface ApiError {
   status: number | 'FETCH_ERROR' | 'PARSING_ERROR' | 'CUSTOM_ERROR';
   message: string;
   fieldErrors: Record<string, string[]>;
-}
-
-interface ErrorData {
-  detail?: string;
-  message?: string;
-  [key: string]: unknown;
 }
 
 export const getApiError = (error: unknown): ApiError => {
@@ -48,7 +43,7 @@ export const getApiError = (error: unknown): ApiError => {
   }
 
   if (typeof apiError.status === 'number') {
-    const data = apiError.data as ErrorData | undefined;
+    const data = apiError.data as ApiErrorResponse | undefined;
 
     const fieldErrors: Record<string, string[]> = {};
 
