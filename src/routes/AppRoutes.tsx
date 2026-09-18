@@ -10,7 +10,7 @@ import AuthLayout from '@/layouts/AuthLayout/AuthLayout';
 import { RootState, useTypedSelector } from 'store/store'
 import ErrorBoundary from '@/components/hoc/ErrorBoundary';
 import NotFoundPage from 'pages/NotFoundPage/NotFoundPage';
-import UsersTestPage from 'features/accounts/pages/UsersTestPage';
+import UsersPage from 'features/accounts/pages/UsersPage';
 import FormBuilder from '@/components/form/formBuilder/FormBuilder';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -76,29 +76,13 @@ const isAuthenticated =
                             >
                                 <Route index element={<AuthPage />} />
                             </Route>
-
                             {/* Dashboard Layout with Nested Routes */}
-                            {/* <Route
-                                path="/"
-                                element={
-                                    isAuthenticated ? (
-                                        <ProtectedRoute>
-                                            <DashboardLayout />
-                                        </ProtectedRoute>
-                                    ) : (
-                                        <Navigate to="/auth" replace />
-                                    )
-                                }
-                            >
-                                <Route index element={<DashboardPage />} />
-                                <Route path="/users/*" element={<FormBuilder entity="users" />} />
-                            </Route> */}
                             <Route
                                 path="/dashboard"
                                 element={<DashboardLayout /> }
                             >
                                 <Route index element={<DashboardPage />} />
-                                <Route path="users" element={<UsersTestPage />} />
+                                <Route path="users" element={<UsersPage />} />
                             </Route>
 
                             {/* Error Page */}
