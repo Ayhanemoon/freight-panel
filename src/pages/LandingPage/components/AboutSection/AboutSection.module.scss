@@ -1,0 +1,609 @@
+.about {
+    position: relative;
+
+    padding: 130px 0;
+
+    overflow: hidden;
+
+    background: #ffffff;
+}
+
+.container {
+    width: min(1240px, calc(100% - 48px));
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    align-items: center;
+    gap: 100px;
+}
+
+/* Visual */
+
+.visual {
+    position: relative;
+
+    min-height: 520px;
+}
+
+.blob {
+    position: absolute;
+
+    width: 410px;
+    height: 410px;
+
+    top: 50px;
+    left: 30px;
+
+    border-radius: 42% 58% 58% 42% / 48% 40% 60% 52%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #e6f1ff,
+            #f6faff
+        );
+
+    transform: rotate(-8deg);
+}
+
+.mapCard {
+    position: absolute;
+
+    width: 420px;
+    height: 300px;
+
+    top: 80px;
+    left: 30px;
+
+    overflow: hidden;
+
+    border-radius: 30px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #e9f3ff,
+            #ffffff
+        );
+
+    box-shadow: 0 25px 70px rgba(22, 89, 157, 0.12);
+}
+
+.mapGrid {
+    position: absolute;
+    inset: 0;
+
+    opacity: 0.35;
+
+    background-image:
+        linear-gradient(
+            #c8def7 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            #c8def7 1px,
+            transparent 1px
+        );
+
+    background-size: 38px 38px;
+}
+
+.route {
+    position: absolute;
+    inset: 0;
+
+    svg {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.pinStart,
+.pinEnd {
+    position: absolute;
+
+    width: 26px;
+    height: 26px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #2878e8;
+
+    box-shadow: 0 7px 20px rgba(40, 120, 232, 0.3);
+
+    span {
+        width: 8px;
+        height: 8px;
+
+        border-radius: 50%;
+
+        background: #ffffff;
+    }
+}
+
+.pinStart {
+    bottom: 45px;
+    left: 30px;
+}
+
+.pinEnd {
+    top: 28px;
+    right: 25px;
+}
+
+/* Truck */
+
+.aboutTruck {
+    position: absolute;
+
+    width: 220px;
+    height: 80px;
+
+    right: 90px;
+    bottom: 55px;
+}
+
+.truckBox {
+    position: absolute;
+
+    width: 150px;
+    height: 55px;
+
+    right: 0;
+    bottom: 15px;
+
+    border-radius: 5px;
+
+    background: #2878e8;
+
+    box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.08);
+}
+
+.truckFront {
+    position: absolute;
+
+    width: 70px;
+    height: 52px;
+
+    left: 0;
+    bottom: 15px;
+
+    border-radius: 13px 5px 4px 4px;
+
+    background: #ffffff;
+
+    border: 2px solid #d3e4f8;
+
+    span {
+        position: absolute;
+
+        width: 37px;
+        height: 22px;
+
+        top: 7px;
+        left: 12px;
+
+        border-radius: 4px;
+
+        background: #8ebcf0;
+    }
+}
+
+.aboutTruck i {
+    position: absolute;
+
+    width: 26px;
+    height: 26px;
+
+    bottom: 2px;
+
+    border: 6px solid #143d70;
+    border-radius: 50%;
+
+    background: #a8bfd8;
+}
+
+.aboutTruck i:first-of-type {
+    left: 15px;
+}
+
+.aboutTruck i:last-of-type {
+    right: 25px;
+}
+
+.boxes {
+    position: absolute;
+
+    bottom: 28px;
+    right: 65px;
+
+    display: flex;
+    align-items: flex-end;
+
+    gap: 4px;
+
+    span {
+        width: 28px;
+        height: 28px;
+
+        border-radius: 3px;
+
+        background: #e8b25f;
+
+        border-bottom: 2px solid #c88c39;
+    }
+
+    span:nth-child(2) {
+        width: 35px;
+        height: 35px;
+    }
+
+    span:nth-child(3) {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Person */
+
+.person {
+    position: absolute;
+
+    bottom: 0;
+    left: 15px;
+
+    width: 150px;
+    height: 220px;
+}
+
+.personHead {
+    position: absolute;
+
+    width: 48px;
+    height: 48px;
+
+    top: 0;
+    left: 48px;
+
+    border-radius: 50%;
+
+    background: #d6a27a;
+
+    box-shadow: inset -8px 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+.personBody {
+    position: absolute;
+
+    width: 120px;
+    height: 150px;
+
+    left: 15px;
+    bottom: 0;
+
+    border-radius: 50px 50px 15px 15px;
+
+    background: linear-gradient(
+        145deg,
+        #1761b9,
+        #0b3e80
+    );
+
+    transform: rotate(-5deg);
+}
+
+.tablet {
+    position: absolute;
+
+    width: 75px;
+    height: 105px;
+
+    top: 25px;
+    left: -15px;
+
+    border: 5px solid #1a426e;
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #d9ecff,
+            #ffffff
+        );
+
+    transform: rotate(12deg);
+
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.12);
+}
+
+.tablet::after {
+    content: '';
+
+    position: absolute;
+
+    width: 45px;
+    height: 4px;
+
+    top: 30px;
+    left: 10px;
+
+    border-radius: 5px;
+
+    background: #2878e8;
+
+    box-shadow:
+        0 13px 0 #c6dcf3,
+        0 26px 0 #c6dcf3;
+}
+
+/* Floating card */
+
+.floatingCard {
+    position: absolute;
+
+    right: 0;
+    top: 25px;
+
+    padding: 13px 16px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border-radius: 15px;
+
+    background: #ffffff;
+
+    box-shadow: 0 15px 35px rgba(30, 84, 140, 0.13);
+
+    direction: rtl;
+}
+
+.floatingCard .check {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #e5f8ef;
+    color: #19a974;
+
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.floatingCard div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.floatingCard strong {
+    color: #173d6a;
+
+    font-size: 12px;
+}
+
+.floatingCard span {
+    color: #7b91a8;
+
+    font-size: 10px;
+}
+
+/* Content */
+
+.content {
+    max-width: 580px;
+}
+
+.eyebrow {
+    position: relative;
+
+    display: inline-block;
+
+    padding-right: 25px;
+
+    color: #2878e8;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.eyebrow::before {
+    content: '';
+
+    position: absolute;
+
+    right: 0;
+    top: 50%;
+
+    width: 17px;
+    height: 3px;
+
+    border-radius: 10px;
+
+    background: #2878e8;
+
+    transform: translateY(-50%);
+}
+
+.content h2 {
+    margin: 13px 0 8px;
+
+    color: #102f57;
+
+    font-size: clamp(34px, 4vw, 48px);
+    font-weight: 900;
+
+    letter-spacing: -1px;
+}
+
+.content h3 {
+    margin: 0 0 20px;
+
+    color: #2878e8;
+
+    font-size: 19px;
+    font-weight: 700;
+
+    line-height: 1.8;
+}
+
+.content > p {
+    margin: 0 0 12px;
+
+    color: #6c8198;
+
+    font-size: 15px;
+    line-height: 2.2;
+}
+
+/* Features */
+
+.features {
+    margin-top: 34px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 24px 20px;
+}
+
+.feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+}
+
+.featureIcon {
+    width: 46px;
+    height: 46px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background: #edf5ff;
+    color: #2878e8;
+
+    svg {
+        width: 23px;
+        height: 23px;
+    }
+}
+
+.feature h4 {
+    margin: 2px 0 5px;
+
+    color: #173d6a;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.feature span {
+    display: block;
+
+    color: #8395a8;
+
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+    .container {
+        gap: 50px;
+    }
+
+    .visual {
+        transform: scale(0.85);
+        transform-origin: center;
+    }
+}
+
+@media (max-width: 800px) {
+    .about {
+        padding: 90px 0;
+    }
+
+    .container {
+        grid-template-columns: 1fr;
+
+        gap: 20px;
+    }
+
+    .visual {
+        min-height: 470px;
+
+        transform: scale(0.85);
+        transform-origin: center;
+    }
+
+    .content {
+        max-width: 650px;
+
+        margin: 0 auto;
+
+        text-align: center;
+    }
+
+    .eyebrow {
+        padding-right: 0;
+
+        &::before {
+            display: none;
+        }
+    }
+
+    .features {
+        text-align: right;
+    }
+}
+
+@media (max-width: 520px) {
+    .container {
+        width: calc(100% - 32px);
+    }
+
+    .visual {
+        min-height: 390px;
+
+        transform: scale(0.62);
+        transform-origin: top center;
+    }
+
+    .content h2 {
+        font-size: 36px;
+    }
+
+    .content h3 {
+        font-size: 17px;
+    }
+
+    .content > p {
+        font-size: 13px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+
+        gap: 18px;
+    }
+}

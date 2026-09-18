@@ -1,0 +1,34 @@
+@font-face {
+    font-family: 'IranYekan';
+    src: url('./../../assets/Fonts/webfonts/IranYekan.woff2') format('woff2'),
+        url('./../../assets/Fonts/webfonts/IranYekan.woff') format('woff'),
+        url('./../../assets/Fonts/webfonts/IranYekan.ttf') format('truetype'),
+        url('./../../assets/Fonts/webfonts/IranYekan.eot') format('embedded-opentype');
+} 
+    
+
+.page {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+
+    background: #ffffff;
+    color: #102a43;
+
+    direction: rtl;
+    font-family: 'IranYekan';
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    button {
+        font-family: inherit;
+    }
+}

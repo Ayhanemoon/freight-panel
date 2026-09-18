@@ -2,10 +2,12 @@ import React, { Suspense } from 'react';
 import ProtectedRoute from './ProtectedRoute';
 import AuthPage from 'pages/AuthPage/AuthPage';
 import DashboardPage from 'pages/DashboardPage';
+import { isTokenExpired } from 'utils/authUtils';
 import ErrorPage from 'pages/ErrorPage/ErrorPage';
 import AuthInitializer from 'routes/AuthInitializer';
+import LandingPage from 'pages/LandingPage/LandingPage';
 import AuthLayout from '@/layouts/AuthLayout/AuthLayout';
-import { RootState, useTypedSelector } from 'store/store';
+import { RootState, useTypedSelector } from 'store/store'
 import ErrorBoundary from '@/components/hoc/ErrorBoundary';
 import NotFoundPage from 'pages/NotFoundPage/NotFoundPage';
 import FormBuilder from '@/components/form/formBuilder/FormBuilder';
@@ -46,7 +48,12 @@ import 'react-toastify/dist/ReactToastify.css';
  * - `AuthLayout`, `DashboardLayout`, `AuthPage`, `DashboardPage`, `ErrorPage`, `NotFoundPage`: Custom components for different layouts and pages.
  */
 const AppRoutes: React.FC = () => {
-    const isAuthenticated = useTypedSelector((state: RootState) => state.auth.isAuthenticated);
+    const { access, access_expires_at } = useTypedSelector(
+  (state: RootState) => state.auth
+);
+
+const isAuthenticated =
+  !!access && !isTokenExpired(access_expires_at);
 
     return (
         <Router>
@@ -54,6 +61,7 @@ const AppRoutes: React.FC = () => {
                 <ErrorBoundary>
                     <Suspense fallback={<div>Loading...</div>}>
                         <Routes>
+                            <Route path="/" element={<LandingPage />} />
                             {/* Auth Layout with Nested Routes */}
                             <Route
                                 path="/auth"
@@ -69,7 +77,7 @@ const AppRoutes: React.FC = () => {
                             </Route>
 
                             {/* Dashboard Layout with Nested Routes */}
-                            <Route
+                            {/* <Route
                                 path="/"
                                 element={
                                     isAuthenticated ? (
@@ -83,7 +91,7 @@ const AppRoutes: React.FC = () => {
                             >
                                 <Route index element={<DashboardPage />} />
                                 <Route path="/users/*" element={<FormBuilder entity="users" />} />
-                            </Route>
+                            </Route> */}
                             <Route
                                 path="/dashboard"
                                 element={<DashboardLayout /> }

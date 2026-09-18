@@ -1,0 +1,238 @@
+.header {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 100;
+
+    color: #ffffff;
+}
+
+.container {
+    width: min(1240px, calc(100% - 48px));
+    height: 88px;
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    flex-shrink: 0;
+}
+
+.logoMark {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+
+    svg {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.logoText {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.desktopNav {
+    display: flex;
+    align-items: center;
+    gap: 38px;
+
+    a {
+        position: relative;
+
+        padding: 8px 0;
+
+        color: rgba(255, 255, 255, 0.78);
+
+        font-size: 15px;
+        font-weight: 500;
+
+        transition:
+            color 0.2s ease,
+            opacity 0.2s ease;
+
+        &::after {
+            content: '';
+
+            position: absolute;
+            right: 0;
+            bottom: 0;
+
+            width: 0;
+            height: 2px;
+
+            border-radius: 10px;
+
+            background: #ffffff;
+
+            transition: width 0.25s ease;
+        }
+
+        &:hover,
+        &.active {
+            color: #ffffff;
+        }
+
+        &:hover::after,
+        &.active::after {
+            width: 100%;
+        }
+    }
+}
+
+.loginButton {
+    min-height: 46px;
+    padding: 0 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    border-radius: 14px;
+
+    background: #ffffff;
+    color: #1261d8;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+    svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    }
+}
+
+.menuButton {
+    display: none;
+
+    width: 44px;
+    height: 44px;
+    padding: 9px;
+
+    border: 0;
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    cursor: pointer;
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    span {
+        display: block;
+        width: 21px;
+        height: 2px;
+
+        border-radius: 5px;
+
+        background: #ffffff;
+    }
+}
+
+.mobileMenu {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .container {
+        height: 76px;
+    }
+
+    .desktopNav,
+    .loginButton {
+        display: none;
+    }
+
+    .menuButton {
+        display: flex;
+    }
+
+    .mobileMenu {
+        display: flex;
+
+        width: min(100%, 1240px);
+        margin: 0 auto;
+        padding: 8px 24px 24px;
+
+        flex-direction: column;
+        gap: 4px;
+
+        background: rgba(5, 30, 70, 0.97);
+
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 18px;
+
+        a {
+            padding: 14px 12px;
+
+            color: rgba(255, 255, 255, 0.8);
+
+            font-size: 15px;
+
+            border-radius: 10px;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.08);
+                color: #ffffff;
+            }
+        }
+    }
+
+    .mobileLogin {
+        margin-top: 8px;
+
+        text-align: center;
+
+        background: #ffffff !important;
+        color: #1261d8 !important;
+
+        font-weight: 700;
+    }
+}
+
+@media (max-width: 500px) {
+    .container {
+        width: calc(100% - 32px);
+    }
+
+    .logoText {
+        font-size: 24px;
+    }
+
+    .logoMark {
+        width: 36px;
+        height: 36px;
+    }
+}
