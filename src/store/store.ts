@@ -11,7 +11,7 @@
  * Key Features:
  * - `auth` slice is persisted using `redux-persist`.
  * - API slice (`api.reducerPath`) is excluded from persistence.
- * - Middleware includes default middleware, API middleware, and custom `authMiddleware`.
+ * - Middleware includes default middleware and RTK Query API middleware.
  * - Listeners are set up for RTK Query to enable automatic refetching and caching.
  * 
  * Exports:
@@ -26,7 +26,6 @@ import baseApi from 'shared/api/baseApi';
 import storage from 'redux-persist/lib/storage';
 import authReducer from 'features/accounts/state/authSlice';
 import { entityApi } from 'features/api/entityApi';
-import userReducer from 'features/users/userSlice';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { persistStore, persistReducer } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
@@ -35,7 +34,6 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // Combine reducers
 const rootReducer = combineReducers({
   auth: authReducer, // Persist this slice
-  users: userReducer,
   [baseApi.reducerPath]: baseApi.reducer,
   [entityApi.reducerPath]: entityApi.reducer,
 });
