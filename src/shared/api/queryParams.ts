@@ -1,5 +1,6 @@
 export interface ListQueryParams {
   page?: number;
+  page_size?: number;
   ordering?: string;
   search?: string;
 }
