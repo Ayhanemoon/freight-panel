@@ -106,7 +106,7 @@ const baseApi = createApi({
 
   baseQuery: baseQueryWithReauth,
 
-  tagTypes: ['Auth', 'User', 'Product'],
+  tagTypes: ['User'],
 
   endpoints: () => ({}),
 });
