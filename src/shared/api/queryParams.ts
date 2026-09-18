@@ -5,7 +5,7 @@ export interface ListQueryParams {
 }
 
 export const buildQueryString = (
-  params?: ListQueryParams
+  params?: ListQueryParams | void
 ): string => {
   if (!params) {
     return '';

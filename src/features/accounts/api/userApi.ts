@@ -21,7 +21,7 @@ interface User {
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<PaginatedResponse<User>,ListQueryParams | undefined>({
+    getUsers: builder.query<PaginatedResponse<User>,ListQueryParams | void>({
       query: (params) =>
         `accounts/api/v1/users/${buildQueryString(params)}`,
       providesTags: ['User'],
