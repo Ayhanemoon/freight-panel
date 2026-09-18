@@ -22,7 +22,7 @@
  * - `useTypedDispatch`: Typed hook for dispatching actions.
  * - `useTypedSelector`: Typed hook for selecting state.
  */
-import api from 'features/api/api';
+import baseApi from 'shared/api/baseApi';
 import storage from 'redux-persist/lib/storage';
 import authReducer from 'features/auth/authSlice';
 import { entityApi } from 'features/api/entityApi';
@@ -37,7 +37,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 const rootReducer = combineReducers({
   auth: authReducer, // Persist this slice
   users: userReducer,
-  [api.reducerPath]: api.reducer,
+  [baseApi.reducerPath]: baseApi.reducer,
   [entityApi.reducerPath]: entityApi.reducer,
 });
 
@@ -65,7 +65,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false, // Required for redux-persist
-    }).concat(api.middleware, entityApi.middleware, authMiddleware),
+    }).concat(baseApi.middleware, entityApi.middleware, authMiddleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

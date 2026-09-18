@@ -2,7 +2,7 @@
  * This module defines an API service using Redux Toolkit's `createApi` function.
  * It is configured to handle API requests with a base URL and authorization headers.
  *
- * @module api
+ * @module baseApi
  */
 
  /**
@@ -19,7 +19,7 @@
   */
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const api = createApi({
+const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.VITE_API_BASE_URL || '/api',
@@ -36,4 +36,4 @@ const api = createApi({
   endpoints: () => ({}),
 });
 
-export default api;
+export default baseApi;

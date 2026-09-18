@@ -2,7 +2,7 @@ import React from 'react';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useLoginMutation } from 'features/api/authApi';
+import { useLoginMutation } from 'features/accounts/api/authApi';
 import { setCredentials } from 'features/auth/authSlice';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { loginValidationSchema } from 'validations/authValidation';

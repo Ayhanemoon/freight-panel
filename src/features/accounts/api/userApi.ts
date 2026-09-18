@@ -1,6 +1,6 @@
-import api from 'features/api/api';
+import baseApi from 'shared/api/baseApi';
 
-export const userApi = api.injectEndpoints({
+export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query({
       query: () => 'accounts/api/v1/users/',

@@ -28,11 +28,13 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'), // Alias for the `src` directory
+        'assets': path.resolve(__dirname, './src/assets'),
         'features': path.resolve(__dirname, './src/features'),
         'components': path.resolve(__dirname, './src/components'),
         'layouts': path.resolve(__dirname, './src/layouts'),
         'pages': path.resolve(__dirname, './src/pages'),
         'routes': path.resolve(__dirname, './src/routes'),
+        'shared': path.resolve(__dirname, './src/shared'),
         'store': path.resolve(__dirname, './src/store'),
         'styles': path.resolve(__dirname, './src/styles'),
         'theme': path.resolve(__dirname, './src/theme'),

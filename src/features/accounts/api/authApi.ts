@@ -1,4 +1,4 @@
-import api from 'features/api/api';
+import baseApi from 'shared/api/baseApi';
 import { setCredentials } from 'features/auth/authSlice';
 
 interface LoginCredentials {
@@ -19,7 +19,7 @@ interface RefreshResponse {
   access: string;
 }
 
-export const authApi = api.injectEndpoints({
+export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<AuthResponse, LoginCredentials>({
       query: (credentials) => ({
