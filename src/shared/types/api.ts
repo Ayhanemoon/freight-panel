@@ -4,6 +4,7 @@ export interface ApiResponse<T> {
 }
 
 export interface ApiErrorResponse {
+  code?: string;
   detail?: string;
   message?: string;
   [key: string]: unknown;

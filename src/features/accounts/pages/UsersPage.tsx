@@ -1,8 +1,9 @@
 import React from 'react';
 import { useGetUsersQuery } from 'features/accounts/api/userApi';
+import { getApiError } from 'shared/api/apiError';
 
 const UsersPage: React.FC = () => {
-  const { data, isLoading, isError, error } = useGetUsersQuery();
+  const { data, isLoading, isError, error } = useGetUsersQuery({page: 2});
 
   if (isLoading) {
     return (
@@ -14,12 +15,14 @@ const UsersPage: React.FC = () => {
   }
 
   if (isError) {
-    console.error('Users API error:', error);
+    const apiError = getApiError(error);
+
+    console.error('Users API error:', apiError);
 
     return (
       <div dir="rtl">
         <h1>کاربران</h1>
-        <p>خطا در دریافت کاربران.</p>
+        <p>{apiError.message}</p>
       </div>
     );
   }

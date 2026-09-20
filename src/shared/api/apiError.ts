@@ -3,6 +3,7 @@ import { ApiErrorResponse } from 'shared/types/api';
 
 export interface ApiError {
   status: number | 'FETCH_ERROR' | 'PARSING_ERROR' | 'CUSTOM_ERROR';
+  code?: string;
   message: string;
   fieldErrors: Record<string, string[]>;
 }
@@ -83,6 +84,7 @@ export const getApiError = (error: unknown): ApiError => {
 
     return {
       status: apiError.status,
+      code: data?.code,
       message,
       fieldErrors,
     };
