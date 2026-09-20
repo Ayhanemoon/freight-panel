@@ -3,7 +3,7 @@ import { useGetUsersQuery } from 'features/accounts/api/userApi';
 import { getApiError } from 'shared/api/apiError';
 
 const UsersPage: React.FC = () => {
-  const { data, isLoading, isError, error } = useGetUsersQuery({page: 2});
+  const { data, isLoading, isError, error } = useGetUsersQuery();
 
   if (isLoading) {
     return (

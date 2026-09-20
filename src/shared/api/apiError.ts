@@ -1,5 +1,6 @@
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { ApiErrorResponse } from 'shared/types/api';
+import { errorMessages } from 'shared/errors/errorMessages';
 
 export interface ApiError {
   status: number | 'FETCH_ERROR' | 'PARSING_ERROR' | 'CUSTOM_ERROR';
@@ -64,7 +65,9 @@ export const getApiError = (error: unknown): ApiError => {
 
     let message = 'خطایی در درخواست رخ داد.';
 
-    if (typeof data?.detail === 'string') {
+    if (data?.code && errorMessages[data.code]) {
+      message = errorMessages[data.code];
+    } else if (typeof data?.detail === 'string') {
       message = data.detail;
     } else if (typeof data?.message === 'string') {
       message = data.message;
