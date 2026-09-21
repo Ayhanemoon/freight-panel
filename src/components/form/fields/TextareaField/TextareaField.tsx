@@ -8,6 +8,7 @@ interface TextareaInputFieldProps {
   onChange: (name: string, value: string) => void;
   required?: boolean;
   rows?: number;
+  error?: string;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ const TextareaInputField: React.FC<TextareaInputFieldProps> = ({
   onChange,
   required = false,
   rows = 4,
+  error = '',
   className = '',
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,6 +36,8 @@ const TextareaInputField: React.FC<TextareaInputFieldProps> = ({
         name={name}
         value={value}
         required={required}
+        error={!!error}
+        helperText={error}
         onChange={handleChange}
         className="form__input"
         variant="outlined"
