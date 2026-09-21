@@ -17,6 +17,7 @@ export interface SelectOption<T = string | number> {
   value: T;
 }
 
+export type FormFieldOptions = Record<string, SelectOption[]>;
 export interface FormFieldConfig {
   type: FieldType;
   label: string;

@@ -1,15 +1,41 @@
 import React from 'react';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useForm } from 'react-hook-form';
+import { Button, Paper, Stack, Typography } from '@mui/material';
+
 import { useGetUsersQuery } from 'features/accounts/api/userApi';
+import { userFormConfig } from 'features/accounts/forms/userForm';
 import { getApiError } from 'shared/api/apiError';
+import FormRenderer from 'shared/forms/FormRenderer';
+import { FormValues } from 'shared/forms/types/form';
 
 const UsersPage: React.FC = () => {
   const { data, isLoading, isError, error } = useGetUsersQuery();
 
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: yupResolver(userFormConfig.validationSchema!),
+    defaultValues: {
+      mobile: '',
+      email: '',
+      branch: null,
+      is_active: true,
+      is_mobile_verified: false,
+    },
+  });
+
+  const handleUserSubmit = (values: FormValues) => {
+    console.log('User form values:', values);
+  };
+
   if (isLoading) {
     return (
       <div dir="rtl">
-        <h1>کاربران</h1>
-        <p>در حال دریافت کاربران...</p>
+        <Typography variant="h5">کاربران</Typography>
+        <Typography>در حال دریافت کاربران...</Typography>
       </div>
     );
   }
@@ -21,49 +47,89 @@ const UsersPage: React.FC = () => {
 
     return (
       <div dir="rtl">
-        <h1>کاربران</h1>
-        <p>{apiError.message}</p>
+        <Typography variant="h5">کاربران</Typography>
+        <Typography>{apiError.message}</Typography>
       </div>
     );
   }
 
   return (
     <div dir="rtl">
-      <h1>کاربران</h1>
+      <Stack spacing={3}>
+        <Typography variant="h4">کاربران</Typography>
 
-      <p>تعداد کاربران: {data?.count ?? 0}</p>
+        <Paper sx={{ p: 3 }}>
+          <Stack
+            component="form"
+            spacing={3}
+            onSubmit={handleSubmit(handleUserSubmit)}
+          >
+            <Typography variant="h6">
+              اطلاعات کاربر
+            </Typography>
 
-      {data?.results.length ? (
-        <table>
-          <thead>
-            <tr>
-              <th>شناسه</th>
-              <th>شماره موبایل</th>
-              <th>ایمیل</th>
-              <th>شعبه</th>
-              <th>فعال</th>
-              <th>تأیید موبایل</th>
-            </tr>
-          </thead>
+            <FormRenderer
+              config={userFormConfig}
+              control={control}
+              errors={errors}
+            />
 
-          <tbody>
-            {data.results.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.mobile}</td>
-                <td>{user.email || '-'}</td>
-                <td>{user.branch_name || '-'}</td>
-                <td>{user.is_active ? 'بله' : 'خیر'}</td>
-                <td>{user.is_mobile_verified ? 'بله' : 'خیر'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p>کاربری وجود ندارد.</p>
-      )}
+            <Stack direction="row" justifyContent="flex-start">
+              <Button type="submit" variant="contained">
+                ذخیره
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Stack spacing={2}>
+            <Typography variant="h6">
+              فهرست کاربران
+            </Typography>
+
+            <Typography>
+              تعداد کاربران: {data?.count ?? 0}
+            </Typography>
+
+            {data?.results.length ? (
+              <table>
+                <thead>
+                  <tr>
+                    <th>شناسه</th>
+                    <th>شماره موبایل</th>
+                    <th>ایمیل</th>
+                    <th>شعبه</th>
+                    <th>فعال</th>
+                    <th>تأیید موبایل</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {data.results.map((user) => (
+                    <tr key={user.id}>
+                      <td>{user.id}</td>
+                      <td>{user.mobile}</td>
+                      <td>{user.email || '-'}</td>
+                      <td>{user.branch?.name || '-'}</td>
+                      <td>{user.is_active ? 'بله' : 'خیر'}</td>
+                      <td>
+                        {user.is_mobile_verified ? 'بله' : 'خیر'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <Typography>
+                کاربری وجود ندارد.
+              </Typography>
+            )}
+          </Stack>
+        </Paper>
+      </Stack>
     </div>
   );
 };
 
-export default UsersPage; 
+export default UsersPage;

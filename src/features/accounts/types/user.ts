@@ -2,8 +2,10 @@ export interface User {
   id: number;
   mobile: string;
   email: string;
-  branch: number | null;
-  branch_name: string | null;
+  branch: {
+    id: number;
+    name: string;
+  } | null;
   is_active: boolean;
   is_mobile_verified: boolean;
   auth_provider: string;

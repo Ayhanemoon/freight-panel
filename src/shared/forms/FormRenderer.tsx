@@ -4,6 +4,7 @@ import { Grid } from '@mui/material';
 
 import {
   FormConfig,
+  FormFieldOptions,
   FormValues,
 } from 'shared/forms/types/form';
 
@@ -47,12 +48,14 @@ interface FormRendererProps {
   config: FormConfig;
   control: Control<FormValues>;
   errors: FieldErrors<FormValues>;
+  fieldOptions?: FormFieldOptions;
 }
 
 const FormRenderer: React.FC<FormRendererProps> = ({
   config,
   control,
   errors,
+  fieldOptions,
 }) => {
   return (
     <Grid container spacing={3}>
@@ -111,7 +114,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       label={fieldConfig.label}
                       value={field.value}
                       onChange={field.onChange}
-                      options={fieldConfig.options || []}
+                      options={fieldOptions?.[name] || fieldConfig.options || []}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={

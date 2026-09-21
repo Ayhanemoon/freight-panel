@@ -25,7 +25,6 @@ export const userFormConfig: FormConfig = {
     email: {
       type: 'text',
       label: 'ایمیل',
-      required: true,
       grid: {
         xs: 12,
         md: 6,
@@ -33,19 +32,9 @@ export const userFormConfig: FormConfig = {
     },
 
     branch: {
-      type: 'number',
-      label: 'شناسه شعبه',
-      defaultValue: null,
-      grid: {
-        xs: 12,
-        md: 6,
-      },
-    },
-
-    branch_name: {
       type: 'text',
-      label: 'نام شعبه',
-      readOnly: true,
+      label: 'شعبه',
+      defaultValue: 'tehran ',
       grid: {
         xs: 12,
         md: 6,
@@ -66,16 +55,6 @@ export const userFormConfig: FormConfig = {
       type: 'switch',
       label: 'تأیید شماره موبایل',
       defaultValue: false,
-      grid: {
-        xs: 12,
-        md: 6,
-      },
-    },
-
-    auth_provider: {
-      type: 'text',
-      label: 'روش احراز هویت',
-      readOnly: true,
       grid: {
         xs: 12,
         md: 6,
