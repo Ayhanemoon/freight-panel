@@ -40,7 +40,7 @@ const SelectInputField: React.FC<SelectInputFieldProps> = ({
       >
         <InputLabel>{label}</InputLabel>
         <Select
-          value={value}
+          value={value ?? ''}
           onChange={(e) => onChange(name, e.target.value)}
           label={label}
           className="form__input"
