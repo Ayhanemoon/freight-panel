@@ -22,6 +22,7 @@ export interface FormFieldConfig {
   label: string;
   required?: boolean;
   defaultValue?: unknown;
+  readOnly?: boolean;
   grid?: {
     xs?: number;
     sm?: number;
