@@ -5,18 +5,7 @@ import {
   ListQueryParams,
 } from 'shared/api/queryParams';
 
-interface User {
-  id: number;
-  mobile: string;
-  email: string;
-  branch: number | null;
-  branch_name: string | null;
-  is_active: boolean;
-  is_mobile_verified: boolean;
-  auth_provider: string;
-  created_at: string;
-  updated_at: string;
-}
+import { User } from 'features/accounts/types/user';
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
