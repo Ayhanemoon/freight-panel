@@ -10,6 +10,7 @@ interface NumberInputFieldProps {
   min?: number;
   max?: number;
   step?: number;
+  error?: string;
   className?: string;
 }
 
@@ -22,6 +23,7 @@ const NumberInputField: React.FC<NumberInputFieldProps> = ({
   min,
   max,
   step,
+  error = '',
   className = '',
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,6 +41,8 @@ const NumberInputField: React.FC<NumberInputFieldProps> = ({
         type="number"
         value={value}
         required={required}
+        error={!!error}
+        helperText={error}
         onChange={handleChange}
         inputProps={{ min, max, step }}
         className="form__input"
