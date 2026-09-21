@@ -5,7 +5,11 @@ import {
   ListQueryParams,
 } from 'shared/api/queryParams';
 
-import { User } from 'features/accounts/types/user';
+import {
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+} from 'features/accounts/types/user';
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -36,7 +40,7 @@ export const userApi = baseApi.injectEndpoints({
       ],
     }),
 
-    createUser: builder.mutation<User, Partial<User>>({
+    createUser: builder.mutation<User, CreateUserRequest>({
       query: (newUser) => ({
         url: 'accounts/api/v1/users/',
         method: 'POST',
@@ -45,6 +49,22 @@ export const userApi = baseApi.injectEndpoints({
 
       invalidatesTags: [{ type: 'User', id: 'LIST' }],
     }),
+
+    updateUser: builder.mutation<
+      User,
+      { id: string; data: UpdateUserRequest }
+    >({
+      query: ({ id, data }) => ({
+        url: `accounts/api/v1/users/${id}/`,
+        method: 'PATCH',
+        body: data,
+      }),
+
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'User', id },
+        { type: 'User', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -52,4 +72,5 @@ export const {
   useGetUsersQuery,
   useGetUserByIdQuery,
   useCreateUserMutation,
-} = userApi;
+  useUpdateUserMutation,
+} = userApi;  
