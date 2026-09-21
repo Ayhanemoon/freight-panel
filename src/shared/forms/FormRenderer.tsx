@@ -225,6 +225,11 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       label={config.label}
                       value={Boolean(field.value)}
                       onChange={field.onChange}
+                      error={
+                        typeof error === 'string'
+                          ? error
+                          : undefined
+                      }
                     />
                   )}
                 </Suspense>
