@@ -39,4 +39,5 @@ export type FormValues = Record<string, unknown>;
 export interface FormConfig {
   fields: FormFieldsConfig;
   validationSchema?: FormValidationSchema;
+  defaultValues?: FormValues;
 }
