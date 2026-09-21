@@ -3,7 +3,7 @@ import { Controller, Control, FieldErrors } from 'react-hook-form';
 import { Grid } from '@mui/material';
 
 import {
-  FormFieldsConfig,
+  FormConfig,
   FormValues,
 } from 'shared/forms/types/form';
 
@@ -44,19 +44,19 @@ const CheckboxInputField = React.lazy(
 );
 
 interface FormRendererProps {
-  fields: FormFieldsConfig;
+  config: FormConfig;
   control: Control<FormValues>;
   errors: FieldErrors<FormValues>;
 }
 
 const FormRenderer: React.FC<FormRendererProps> = ({
-  fields,
+  config,
   control,
   errors,
 }) => {
   return (
     <Grid container spacing={3}>
-      {Object.entries(fields).map(([name, config]) => {
+      {Object.entries(config.fields).map(([name, fieldConfig]) => {
         const error = errors[name]?.message;
 
         return (
@@ -64,17 +64,17 @@ const FormRenderer: React.FC<FormRendererProps> = ({
             key={name}
             name={name}
             control={control}
-            defaultValue={config.defaultValue}
+            defaultValue={fieldConfig.defaultValue}
             render={({ field }) => (
-              <Grid size={config.grid}>
+              <Grid size={fieldConfig.grid}>
                 <Suspense fallback={null}>
-                  {config.type === 'switch' && (
+                  {fieldConfig.type === 'switch' && (
                     <SwitchInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       checked={Boolean(field.value)}
                       onChange={field.onChange}
-                      required={config.required}
+                      required={fieldConfig.required}
                       error={
                         typeof error === 'string'
                           ? error
@@ -83,18 +83,18 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'date' && (
+                  {fieldConfig.type === 'date' && (
                     <DateInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={
                         typeof field.value === 'string'
                           ? field.value
                           : null
                       }
                       onChange={field.onChange}
-                      required={config.required}
-                      options={config.options || []}
+                      required={fieldConfig.required}
+                      options={fieldConfig.options || []}
                       error={
                         typeof error === 'string'
                           ? error
@@ -103,14 +103,14 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'select' && (
+                  {fieldConfig.type === 'select' && (
                     <SelectInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={field.value}
                       onChange={field.onChange}
-                      options={config.options || []}
-                      required={config.required}
+                      options={fieldConfig.options || []}
+                      required={fieldConfig.required}
                       error={
                         typeof error === 'string'
                           ? error
@@ -119,21 +119,21 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'radio' && (
+                  {fieldConfig.type === 'radio' && (
                     <RadioInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={
                         typeof field.value === 'string'
                           ? field.value
                           : ''
                       }
                       onChange={field.onChange}
-                      options={(config.options || []).map((option) => ({
+                      options={(fieldConfig.options || []).map((option) => ({
                         label: option.label,
                         value: String(option.value),
                       }))}
-                      required={config.required}
+                      required={fieldConfig.required}
                       error={
                         typeof error === 'string'
                           ? error
@@ -142,17 +142,17 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'text' && (
+                  {fieldConfig.type === 'text' && (
                     <TextInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={
                         typeof field.value === 'string'
                           ? field.value
                           : ''
                       }
                       onChange={field.onChange}
-                      required={config.required}
+                      required={fieldConfig.required}
                       error={
                         typeof error === 'string'
                           ? error
@@ -161,10 +161,10 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'number' && (
+                  {fieldConfig.type === 'number' && (
                     <NumberInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={
                         typeof field.value === 'number' ||
                         typeof field.value === 'string'
@@ -172,7 +172,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           : ''
                       }
                       onChange={field.onChange}
-                      required={config.required}
+                      required={fieldConfig.required}
                       error={
                         typeof error === 'string'
                           ? error
@@ -181,17 +181,17 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'textarea' && (
+                  {fieldConfig.type === 'textarea' && (
                     <TextareaInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={
                         typeof field.value === 'string'
                           ? field.value
                           : ''
                       }
                       onChange={field.onChange}
-                      required={config.required}
+                      required={fieldConfig.required}
                       error={
                         typeof error === 'string'
                           ? error
@@ -200,17 +200,17 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'file' && (
+                  {fieldConfig.type === 'file' && (
                     <FileInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={
                         field.value instanceof File
                           ? field.value
                           : null
                       }
                       onChange={field.onChange}
-                      required={config.required}
+                      required={fieldConfig.required}
                       error={
                         typeof error === 'string'
                           ? error
@@ -219,10 +219,10 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                     />
                   )}
 
-                  {config.type === 'checkbox' && (
+                  {fieldConfig.type === 'checkbox' && (
                     <CheckboxInputField
                       name={name}
-                      label={config.label}
+                      label={fieldConfig.label}
                       value={Boolean(field.value)}
                       onChange={field.onChange}
                       error={
