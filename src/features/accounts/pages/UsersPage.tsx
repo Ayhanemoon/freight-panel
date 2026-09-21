@@ -9,8 +9,17 @@ import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
 import { FormValues } from 'shared/forms/types/form';
 
+import { useGetBranchesQuery } from 'features/freight/api/branchApi';
+
 const UsersPage: React.FC = () => {
   const { data, isLoading, isError, error } = useGetUsersQuery();
+  const { data: branchesData } = useGetBranchesQuery();
+
+  const branchOptions =
+    branchesData?.results.map((branch) => ({
+      label: branch.name,
+      value: branch.id,
+    })) ?? [];
 
   const {
     control,
@@ -72,6 +81,9 @@ const UsersPage: React.FC = () => {
               config={userFormConfig}
               control={control}
               errors={errors}
+              fieldOptions={{
+                branch: branchOptions,
+              }}
             />
 
             <Stack direction="row" justifyContent="flex-start">
