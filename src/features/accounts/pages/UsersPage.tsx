@@ -1,19 +1,21 @@
 import React from 'react';
-import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Paper, Stack, Typography } from '@mui/material';
 
-import { useGetUsersQuery } from 'features/accounts/api/userApi';
-import { userFormConfig } from 'features/accounts/forms/userForm';
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
 import { FormValues } from 'shared/forms/types/form';
-
+import { userFormConfig } from 'features/accounts/forms/userForm';
 import { useGetBranchesQuery } from 'features/freight/api/branchApi';
+import { userFormToCreateRequest } from 'features/accounts/forms/userMapping';
+import { useGetUsersQuery, useCreateUserMutation } from 'features/accounts/api/userApi';
+
 
 const UsersPage: React.FC = () => {
   const { data, isLoading, isError, error } = useGetUsersQuery();
   const { data: branchesData } = useGetBranchesQuery();
+  const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
 
   const branchOptions =
     branchesData?.results.map((branch) => ({
@@ -36,8 +38,15 @@ const UsersPage: React.FC = () => {
     },
   });
 
-  const handleUserSubmit = (values: FormValues) => {
-    console.log('User form values:', values);
+  const handleUserSubmit = async (values: FormValues) => {
+    const request = userFormToCreateRequest(values);
+
+    try {
+      await createUser(request).unwrap();
+      console.log('User created successfully');
+    } catch (error) {
+      console.error('Create user error:', error);
+    }
   };
 
   if (isLoading) {
@@ -87,8 +96,12 @@ const UsersPage: React.FC = () => {
             />
 
             <Stack direction="row" justifyContent="flex-start">
-              <Button type="submit" variant="contained">
-                ذخیره
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={isCreating}
+              >
+                {isCreating ? 'در حال ذخیره...' : 'ذخیره'}
               </Button>
             </Stack>
           </Stack>
