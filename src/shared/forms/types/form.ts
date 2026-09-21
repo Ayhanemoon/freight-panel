@@ -1,3 +1,6 @@
+
+import { FormValidationSchema } from 'shared/forms/validation';
+
 export type FieldType =
   | 'text'
   | 'number'
@@ -32,3 +35,8 @@ export interface FormFieldConfig {
 export type FormFieldsConfig = Record<string, FormFieldConfig>;
 
 export type FormValues = Record<string, unknown>;
+
+export interface FormConfig {
+  fields: FormFieldsConfig;
+  validationSchema?: FormValidationSchema;
+}
