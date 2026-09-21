@@ -15,6 +15,7 @@ interface SelectInputFieldProps {
   required?: boolean;
   error?: string;
   className?: string;
+  readOnly?: boolean;
 }
 
 const SelectInputField: React.FC<SelectInputFieldProps> = ({
@@ -26,6 +27,7 @@ const SelectInputField: React.FC<SelectInputFieldProps> = ({
   required = false,
   error = '',
   className = '',
+  readOnly = false,
 }) => {
   return (
     <div className={`form__group ${className}`}>
@@ -34,6 +36,7 @@ const SelectInputField: React.FC<SelectInputFieldProps> = ({
         fullWidth
         required={required}
         error={!!error}
+        disabled={!!readOnly}
       >
         <InputLabel>{label}</InputLabel>
         <Select
@@ -41,6 +44,7 @@ const SelectInputField: React.FC<SelectInputFieldProps> = ({
           onChange={(e) => onChange(name, e.target.value)}
           label={label}
           className="form__input"
+          disabled={!!readOnly}
         >
           {options.map((option) => (
             <MenuItem key={option.value} value={option.value}>

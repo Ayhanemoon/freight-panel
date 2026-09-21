@@ -10,6 +10,7 @@ interface TextareaInputFieldProps {
   rows?: number;
   error?: string;
   className?: string;
+  readOnly?: boolean; // Optional readOnly prop
 }
 
 const TextareaInputField: React.FC<TextareaInputFieldProps> = ({
@@ -21,6 +22,7 @@ const TextareaInputField: React.FC<TextareaInputFieldProps> = ({
   rows = 4,
   error = '',
   className = '',
+  readOnly = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(name, e.target.value);
@@ -41,6 +43,7 @@ const TextareaInputField: React.FC<TextareaInputFieldProps> = ({
         onChange={handleChange}
         className="form__input"
         variant="outlined"
+        disabled={!!readOnly}
       />
     </div>
   );

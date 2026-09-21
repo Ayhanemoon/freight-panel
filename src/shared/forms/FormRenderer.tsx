@@ -75,6 +75,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       checked={Boolean(field.value)}
                       onChange={field.onChange}
                       required={fieldConfig.required}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -95,6 +96,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       onChange={field.onChange}
                       required={fieldConfig.required}
                       options={fieldConfig.options || []}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -111,6 +113,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       onChange={field.onChange}
                       options={fieldConfig.options || []}
                       required={fieldConfig.required}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -134,6 +137,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                         value: String(option.value),
                       }))}
                       required={fieldConfig.required}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -153,6 +157,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       }
                       onChange={field.onChange}
                       required={fieldConfig.required}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -173,6 +178,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       }
                       onChange={field.onChange}
                       required={fieldConfig.required}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -192,6 +198,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       }
                       onChange={field.onChange}
                       required={fieldConfig.required}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -211,6 +218,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       }
                       onChange={field.onChange}
                       required={fieldConfig.required}
+                      readonly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
@@ -225,6 +233,8 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       label={fieldConfig.label}
                       value={Boolean(field.value)}
                       onChange={field.onChange}
+                      required={fieldConfig.required}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error

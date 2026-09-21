@@ -12,6 +12,7 @@ interface NumberInputFieldProps {
   step?: number;
   error?: string;
   className?: string;
+  readOnly?: boolean; // Optional readOnly prop
 }
 
 const NumberInputField: React.FC<NumberInputFieldProps> = ({
@@ -25,6 +26,7 @@ const NumberInputField: React.FC<NumberInputFieldProps> = ({
   step,
   error = '',
   className = '',
+  readOnly = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseFloat(e.target.value);
@@ -47,6 +49,7 @@ const NumberInputField: React.FC<NumberInputFieldProps> = ({
         inputProps={{ min, max, step }}
         className="form__input"
         variant="outlined"
+        disabled={!!readOnly}
       />
     </div>
   );

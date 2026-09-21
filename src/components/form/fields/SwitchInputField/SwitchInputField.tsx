@@ -17,6 +17,7 @@ interface SwitchInputFieldProps {
   required?: boolean;
   error?: string;
   className?: string;
+  readOnly?: boolean; // Optional readOnly prop
 }
 
 const SwitchInputField: React.FC<SwitchInputFieldProps> = ({
@@ -27,6 +28,7 @@ const SwitchInputField: React.FC<SwitchInputFieldProps> = ({
   required = false,
   error = '',
   className = '',
+  readOnly = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(name, e.target.checked);
@@ -41,6 +43,7 @@ const SwitchInputField: React.FC<SwitchInputFieldProps> = ({
             onChange={handleChange}
             name={name}
             color="primary"
+            disabled={!!readOnly}
           />
         }
         label={

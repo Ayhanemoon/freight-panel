@@ -12,6 +12,7 @@ interface FileInputFieldProps {
   required?: boolean;
   error?: string;
   className?: string;
+  readonly?: boolean;
 }
 
 const FileInputField: React.FC<FileInputFieldProps> = ({
@@ -23,6 +24,7 @@ const FileInputField: React.FC<FileInputFieldProps> = ({
   required = false,
   error = '',
   className = '',
+  readonly = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +46,7 @@ const FileInputField: React.FC<FileInputFieldProps> = ({
         ref={inputRef}
         type="file"
         accept={accept}
+        disabled={!!readonly}
         onChange={handleFileChange}
         className="form__input--file"
         style={{ display: 'none' }}
@@ -52,6 +55,7 @@ const FileInputField: React.FC<FileInputFieldProps> = ({
         variant="outlined" 
         onClick={handleButtonClick}
         className="form__input"
+        disabled={!!readonly}
         color={error ? 'error' : 'primary'}
          >
         {value ? 'تغییر فایل' : 'انتخاب فایل'}

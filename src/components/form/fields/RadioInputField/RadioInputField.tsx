@@ -25,6 +25,7 @@ interface RadioInputFieldProps {
   error?: string;
   className?: string;
   row?: boolean;
+  readOnly?: boolean;
 }
 
 const RadioInputField: React.FC<RadioInputFieldProps> = ({
@@ -37,6 +38,7 @@ const RadioInputField: React.FC<RadioInputFieldProps> = ({
   error = '',
   className = '',
   row = false,
+  readOnly = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(name, e.target.value);
@@ -44,7 +46,9 @@ const RadioInputField: React.FC<RadioInputFieldProps> = ({
 
   return (
     <FormControl className={`form__group ${className}`} required={required} error={!!error}>
-      <FormLabel className="form__label">{label}</FormLabel>
+      <FormLabel className="form__label" disabled={!!readOnly}>
+        {label}
+      </FormLabel>
       <RadioGroup
         name={name}
         value={value}
@@ -59,6 +63,7 @@ const RadioInputField: React.FC<RadioInputFieldProps> = ({
             control={<Radio />}
             label={option.label}
             className="form__input--radio-item"
+            disabled={!!readOnly}
           />
         ))}
       </RadioGroup>

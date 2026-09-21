@@ -9,6 +9,7 @@ interface TextInputFieldProps {
   required?: boolean;
   error?: string;
   className?: string;
+  readOnly?: boolean; // Optional readOnly prop
 }
 
 const TextInputField: React.FC<TextInputFieldProps> = ({
@@ -19,6 +20,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
   required = false,
   error = '',
   className = '',
+  readOnly = false,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -38,6 +40,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
         onChange={handleChange}
         className="form__input"
         variant="outlined"
+        disabled={!!readOnly}
       />
     </div>
   );

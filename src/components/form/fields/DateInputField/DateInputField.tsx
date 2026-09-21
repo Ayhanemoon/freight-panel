@@ -16,6 +16,7 @@ interface DateInputFieldProps {
   className?: string;
   options: { label: string; value: any }[];
   error?: string; // For validation error messages
+  readOnly?: boolean; // Optional readOnly prop
 }
 
 import { Locale } from 'date-fns-jalali';
@@ -45,6 +46,7 @@ const DateInputField: React.FC<DateInputFieldProps> = ({
   className = '',
   options,
   error = '',
+  readOnly = false,
 }) => {
   // Safe parse
   const safeValue: Date | null =
@@ -70,6 +72,11 @@ const DateInputField: React.FC<DateInputFieldProps> = ({
               size: 'small',
               error: !!error,
               helperText: error,
+              slotProps: {
+                htmlInput: {
+                  readOnly,
+                },
+              },
             } as any,
           }}
         />

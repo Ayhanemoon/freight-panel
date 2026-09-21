@@ -9,6 +9,7 @@ interface CheckboxInputFieldProps {
   required?: boolean;
   error?: string;
   className?: string;
+  readOnly?: boolean;
 }
 
 const CheckboxInputField: React.FC<CheckboxInputFieldProps> = ({
@@ -19,6 +20,7 @@ const CheckboxInputField: React.FC<CheckboxInputFieldProps> = ({
   required = false,
   error = '',
   className = '',
+  readOnly = false,
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(name, e.target.checked);
@@ -29,6 +31,7 @@ const CheckboxInputField: React.FC<CheckboxInputFieldProps> = ({
         component="legend"
         className="form__label"
         required={required}
+        disabled={!!readOnly}
         error={!!error}
       >
         {label}
@@ -41,6 +44,7 @@ const CheckboxInputField: React.FC<CheckboxInputFieldProps> = ({
             onChange={handleChange}
             name={name}
             color="primary"
+            disabled={!!readOnly}
           />
         }
         label=""
