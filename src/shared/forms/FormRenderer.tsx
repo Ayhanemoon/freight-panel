@@ -218,7 +218,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       }
                       onChange={field.onChange}
                       required={fieldConfig.required}
-                      readonly={fieldConfig.readOnly}
+                      readOnly={fieldConfig.readOnly}
                       error={
                         typeof error === 'string'
                           ? error
