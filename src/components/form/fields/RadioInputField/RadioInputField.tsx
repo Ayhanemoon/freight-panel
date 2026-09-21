@@ -2,6 +2,7 @@ import React from 'react';
 import {
   FormControl,
   FormLabel,
+  FormHelperText,
   RadioGroup,
   FormControlLabel,
   Radio,
@@ -21,6 +22,7 @@ interface RadioInputFieldProps {
   onChange: (name: string, value: string) => void;
   options: Option[];
   required?: boolean;
+  error?: string;
   className?: string;
   row?: boolean;
 }
@@ -32,6 +34,7 @@ const RadioInputField: React.FC<RadioInputFieldProps> = ({
   onChange,
   options,
   required = false,
+  error = '',
   className = '',
   row = false,
 }) => {
@@ -40,7 +43,7 @@ const RadioInputField: React.FC<RadioInputFieldProps> = ({
   };
 
   return (
-    <FormControl className={`form__group ${className}`} required={required}>
+    <FormControl className={`form__group ${className}`} required={required} error={!!error}>
       <FormLabel className="form__label">{label}</FormLabel>
       <RadioGroup
         name={name}
@@ -59,6 +62,7 @@ const RadioInputField: React.FC<RadioInputFieldProps> = ({
           />
         ))}
       </RadioGroup>
+      {error && <FormHelperText>{error}</FormHelperText>}
     </FormControl>
   );
 };

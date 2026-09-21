@@ -134,6 +134,11 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                         value: String(option.value),
                       }))}
                       required={config.required}
+                      error={
+                        typeof error === 'string'
+                          ? error
+                          : undefined
+                      }
                     />
                   )}
 
