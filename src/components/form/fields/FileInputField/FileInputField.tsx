@@ -10,6 +10,7 @@ interface FileInputFieldProps {
   onChange: (name: string, file: File | null) => void;
   accept?: string;
   required?: boolean;
+  error?: string;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ const FileInputField: React.FC<FileInputFieldProps> = ({
   onChange,
   accept = '',
   required = false,
+  error = '',
   className = '',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,9 +48,23 @@ const FileInputField: React.FC<FileInputFieldProps> = ({
         className="form__input--file"
         style={{ display: 'none' }}
       />
-      <Button variant="outlined" onClick={handleButtonClick} className="form__input">
+      <Button 
+        variant="outlined" 
+        onClick={handleButtonClick}
+        className="form__input"
+        color={error ? 'error' : 'primary'}
+         >
         {value ? 'تغییر فایل' : 'انتخاب فایل'}
       </Button>
+      {error && (
+        <Typography
+          variant="caption"
+          color="error"
+          className="form__error"
+        >
+          {error}
+        </Typography>
+      )}
       {value && (
         <Typography variant="body2" className="form__filename">
           {value.name}
