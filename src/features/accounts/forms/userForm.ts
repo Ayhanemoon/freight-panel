@@ -2,11 +2,20 @@ import { FormConfig } from 'shared/forms/types/form';
 
 export const userFormConfig: FormConfig = {
   fields: {
+    id: {
+      type: 'number',
+      label: 'شناسه',
+      readOnly: true,
+      grid: {
+        xs: 12,
+        md: 6,
+      },
+    },
+
     mobile: {
       type: 'text',
       label: 'شماره موبایل',
       required: true,
-      defaultValue: '',
       grid: {
         xs: 12,
         md: 6,
@@ -17,7 +26,6 @@ export const userFormConfig: FormConfig = {
       type: 'text',
       label: 'ایمیل',
       required: true,
-      defaultValue: '',
       grid: {
         xs: 12,
         md: 6,
@@ -28,6 +36,16 @@ export const userFormConfig: FormConfig = {
       type: 'number',
       label: 'شناسه شعبه',
       defaultValue: null,
+      grid: {
+        xs: 12,
+        md: 6,
+      },
+    },
+
+    branch_name: {
+      type: 'text',
+      label: 'نام شعبه',
+      readOnly: true,
       grid: {
         xs: 12,
         md: 6,
@@ -53,13 +71,35 @@ export const userFormConfig: FormConfig = {
         md: 6,
       },
     },
-  },
 
-  defaultValues: {
-    mobile: '',
-    email: '',
-    branch: null,
-    is_active: true,
-    is_mobile_verified: false,
+    auth_provider: {
+      type: 'text',
+      label: 'روش احراز هویت',
+      readOnly: true,
+      grid: {
+        xs: 12,
+        md: 6,
+      },
+    },
+
+    created_at: {
+      type: 'text',
+      label: 'تاریخ ایجاد',
+      readOnly: true,
+      grid: {
+        xs: 12,
+        md: 6,
+      },
+    },
+
+    updated_at: {
+      type: 'text',
+      label: 'آخرین بروزرسانی',
+      readOnly: true,
+      grid: {
+        xs: 12,
+        md: 6,
+      },
+    },
   },
 };
