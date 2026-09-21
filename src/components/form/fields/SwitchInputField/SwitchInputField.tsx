@@ -1,5 +1,11 @@
 import React from 'react';
-import { FormControl, FormControlLabel, Switch, Typography } from '@mui/material';
+import { 
+  FormControl,
+  FormControlLabel,
+  FormHelperText,
+  Switch, 
+  Typography
+} from '@mui/material';
 
 import './SwitchInputField.scss';
 
@@ -19,6 +25,7 @@ const SwitchInputField: React.FC<SwitchInputFieldProps> = ({
   checked,
   onChange,
   required = false,
+  error = '',
   className = '',
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,7 +33,7 @@ const SwitchInputField: React.FC<SwitchInputFieldProps> = ({
   };
 
   return (
-    <FormControl component="fieldset" className={`form__group ${className}`}>
+    <FormControl component="fieldset" className={`form__group ${className}`} error={!!error}>
       <FormControlLabel
         control={
           <Switch
@@ -43,6 +50,7 @@ const SwitchInputField: React.FC<SwitchInputFieldProps> = ({
         }
         className="form__input--switch"
       />
+      {error && <FormHelperText>{error}</FormHelperText>}
     </FormControl>
   );
 };
