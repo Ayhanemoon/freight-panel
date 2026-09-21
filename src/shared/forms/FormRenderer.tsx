@@ -111,6 +111,11 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       onChange={field.onChange}
                       options={config.options || []}
                       required={config.required}
+                      error={
+                        typeof error === 'string'
+                          ? error
+                          : undefined
+                      }
                     />
                   )}
 
