@@ -1,0 +1,34 @@
+export type FieldType =
+  | 'text'
+  | 'number'
+  | 'switch'
+  | 'date'
+  | 'select'
+  | 'file'
+  | 'radio'
+  | 'textarea'
+  | 'checkbox';
+
+export interface SelectOption<T = string | number> {
+  label: string;
+  value: T;
+}
+
+export interface FormFieldConfig {
+  type: FieldType;
+  label: string;
+  required?: boolean;
+  defaultValue?: unknown;
+  grid?: {
+    xs?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+  };
+  options?: SelectOption[];
+}
+
+export type FormFieldsConfig = Record<string, FormFieldConfig>;
+
+export type FormValues = Record<string, unknown>;
