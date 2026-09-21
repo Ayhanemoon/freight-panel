@@ -32,9 +32,19 @@ export const userFormConfig: FormConfig = {
     },
 
     branch: {
-      type: 'text',
+      type: 'select',
       label: 'شعبه',
-      defaultValue: 'tehran ',
+      required: true,
+      grid: {
+        xs: 12,
+        md: 6,
+      },
+    },
+
+    password: {
+      type: 'text',
+      label: 'رمز عبور',
+      required: true,
       grid: {
         xs: 12,
         md: 6,
@@ -54,7 +64,7 @@ export const userFormConfig: FormConfig = {
     is_mobile_verified: {
       type: 'switch',
       label: 'تأیید شماره موبایل',
-      defaultValue: false,
+      readOnly: true,
       grid: {
         xs: 12,
         md: 6,
