@@ -11,6 +11,7 @@ import { RootState, useTypedSelector } from 'store/store'
 import ErrorBoundary from '@/components/hoc/ErrorBoundary';
 import NotFoundPage from 'pages/NotFoundPage/NotFoundPage';
 import UsersPage from 'features/accounts/pages/UsersPage';
+import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import FormBuilder from '@/components/form/formBuilder/FormBuilder';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -83,6 +84,10 @@ const isAuthenticated =
                             >
                                 <Route index element={<DashboardPage />} />
                                 <Route path="users" element={<UsersPage />} />
+                                <Route
+                                    path="users/:id"
+                                    element={<UserDetailPage />}
+                                />
                             </Route>
 
                             {/* Error Page */}
