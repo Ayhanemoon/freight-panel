@@ -1,0 +1,62 @@
+.container {
+  width: 100%;
+  overflow: hidden;
+  direction: rtl;
+}
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 720px;
+}
+
+.headerCell {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bodyCell {
+  white-space: normal;
+  vertical-align: middle;
+}
+
+.truncatedCell {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.checkboxCell {
+  width: 48px;
+  white-space: nowrap;
+}
+
+.actionsCell {
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  direction: rtl;
+}
+
+.stateCell {
+  height: 160px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pagination {
+  direction: ltr;
+}
