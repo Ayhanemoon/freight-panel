@@ -6,16 +6,24 @@ import { Button, Paper, Stack, Typography } from '@mui/material';
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
 import { FormValues } from 'shared/forms/types/form';
+import DataTable from 'shared/components/DataTable/DataTable';
+
 import { userFormConfig } from 'features/accounts/forms/userForm';
 import { useGetBranchesQuery } from 'features/freight/api/branchApi';
 import { userFormToCreateRequest } from 'features/accounts/forms/userMapping';
-import { useGetUsersQuery, useCreateUserMutation } from 'features/accounts/api/userApi';
-
+import {
+  useGetUsersQuery,
+  useCreateUserMutation,
+} from 'features/accounts/api/userApi';
+import { User } from 'features/accounts/types/user';
 
 const UsersPage: React.FC = () => {
   const { data, isLoading, isError, error } = useGetUsersQuery();
+
   const { data: branchesData } = useGetBranchesQuery();
-  const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+
+  const [createUser, { isLoading: isCreating }] =
+    useCreateUserMutation();
 
   const branchOptions =
     branchesData?.results.map((branch) => ({
@@ -50,11 +58,54 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  const userColumns = [
+    {
+      key: 'id',
+      header: 'شناسه',
+      align: 'right' as const,
+      width: 40,
+    },
+    {
+      key: 'mobile',
+      header: 'شماره موبایل',
+      align: 'right' as const,
+    },
+    {
+      key: 'email',
+      header: 'ایمیل',
+      align: 'right' as const,
+      render: (user: User) => user.email || '—',
+      truncate: true,
+    },
+    {
+      key: 'branch',
+      header: 'شعبه',
+      align: 'right' as const,
+      render: (user: User) => user.branch?.name || '—',
+    },
+    {
+      key: 'is_active',
+      header: 'فعال',
+      align: 'center' as const,
+      render: (user: User) =>
+        user.is_active ? 'بله' : 'خیر',
+    },
+    {
+      key: 'is_mobile_verified',
+      header: 'تأیید موبایل',
+      align: 'center' as const,
+      render: (user: User) =>
+        user.is_mobile_verified ? 'بله' : 'خیر',
+    },
+  ];
+
   if (isLoading) {
     return (
       <div dir="rtl">
         <Typography variant="h5">کاربران</Typography>
-        <Typography>در حال دریافت کاربران...</Typography>
+        <Typography>
+          در حال دریافت کاربران...
+        </Typography>
       </div>
     );
   }
@@ -67,7 +118,9 @@ const UsersPage: React.FC = () => {
     return (
       <div dir="rtl">
         <Typography variant="h5">کاربران</Typography>
-        <Typography>{apiError.message}</Typography>
+        <Typography>
+          {apiError.message}
+        </Typography>
       </div>
     );
   }
@@ -75,7 +128,9 @@ const UsersPage: React.FC = () => {
   return (
     <div dir="rtl">
       <Stack spacing={3}>
-        <Typography variant="h4">کاربران</Typography>
+        <Typography variant="h4">
+          کاربران
+        </Typography>
 
         <Paper sx={{ p: 3 }}>
           <Stack
@@ -96,13 +151,18 @@ const UsersPage: React.FC = () => {
               }}
             />
 
-            <Stack direction="row" justifyContent="flex-start">
+            <Stack
+              direction="row"
+              justifyContent="flex-start"
+            >
               <Button
                 type="submit"
                 variant="contained"
                 disabled={isCreating}
               >
-                {isCreating ? 'در حال ذخیره...' : 'ذخیره'}
+                {isCreating
+                  ? 'در حال ذخیره...'
+                  : 'ذخیره'}
               </Button>
             </Stack>
           </Stack>
@@ -118,39 +178,13 @@ const UsersPage: React.FC = () => {
               تعداد کاربران: {data?.count ?? 0}
             </Typography>
 
-            {data?.results.length ? (
-              <table>
-                <thead>
-                  <tr>
-                    <th>شناسه</th>
-                    <th>شماره موبایل</th>
-                    <th>ایمیل</th>
-                    <th>شعبه</th>
-                    <th>فعال</th>
-                    <th>تأیید موبایل</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {data.results.map((user) => (
-                    <tr key={user.id}>
-                      <td>{user.id}</td>
-                      <td>{user.mobile}</td>
-                      <td>{user.email || '-'}</td>
-                      <td>{user.branch?.name || '-'}</td>
-                      <td>{user.is_active ? 'بله' : 'خیر'}</td>
-                      <td>
-                        {user.is_mobile_verified ? 'بله' : 'خیر'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <Typography>
-                کاربری وجود ندارد.
-              </Typography>
-            )}
+            <DataTable<User>
+              rows={data?.results ?? []}
+              columns={userColumns}
+              getRowId={(user) => user.id}
+              loading={false}
+              emptyMessage="کاربری وجود ندارد."
+            />
           </Stack>
         </Paper>
       </Stack>
