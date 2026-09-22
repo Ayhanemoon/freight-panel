@@ -22,6 +22,8 @@ import {
   DataTableRowId,
 } from './types';
 
+import { convertToPersianDigits } from 'shared/utils/number';
+
 import styles from './DataTable.module.scss';
 
 const DataTable = <T,>({
@@ -299,8 +301,13 @@ const DataTable = <T,>({
               Number(event.target.value)
             )
           }
-          rowsPerPageOptions={
-            pagination.pageSizeOptions ?? [10, 20, 50]
+          rowsPerPageOptions={[
+            { value: 10, label: convertToPersianDigits(10) },
+            { value: 20, label: convertToPersianDigits(20) },
+            { value: 50, label: convertToPersianDigits(50) },
+          ]}
+          labelDisplayedRows={({ from, to, count }) =>
+            `${convertToPersianDigits(from)}–${convertToPersianDigits(to)} از ${convertToPersianDigits(count)}`
           }
           labelRowsPerPage="تعداد در صفحه:"
           className={styles.pagination}
