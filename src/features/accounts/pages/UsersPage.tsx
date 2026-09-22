@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Paper, Stack, Typography } from '@mui/material';
@@ -18,7 +18,19 @@ import {
 import { User } from 'features/accounts/types/user';
 
 const UsersPage: React.FC = () => {
-  const { data, isLoading, isError, error } = useGetUsersQuery();
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+  } = useGetUsersQuery({
+    page: page + 1,
+    page_size: pageSize,
+  });
 
   const { data: branchesData } = useGetBranchesQuery();
 
@@ -182,8 +194,19 @@ const UsersPage: React.FC = () => {
               rows={data?.results ?? []}
               columns={userColumns}
               getRowId={(user) => user.id}
-              loading={false}
+              loading={isFetching}
               emptyMessage="کاربری وجود ندارد."
+              pagination={{
+                page,
+                pageSize,
+                total: data?.count ?? 0,
+                pageSizeOptions: [10, 20, 50],
+                onPageChange: setPage,
+                onPageSizeChange: (newPageSize) => {
+                  setPageSize(newPageSize);
+                  setPage(0);
+                },
+              }}
             />
           </Stack>
         </Paper>
