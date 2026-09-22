@@ -11,6 +11,7 @@ import { RootState, useTypedSelector } from 'store/store'
 import ErrorBoundary from '@/components/hoc/ErrorBoundary';
 import NotFoundPage from 'pages/NotFoundPage/NotFoundPage';
 import UsersPage from 'features/accounts/pages/UsersPage';
+import UserEditPage from 'features/accounts/pages/UserEditPage';
 import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import FormBuilder from '@/components/form/formBuilder/FormBuilder';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
@@ -87,6 +88,10 @@ const isAuthenticated =
                                 <Route
                                     path="users/:id"
                                     element={<UserDetailPage />}
+                                />
+                                <Route
+                                    path="users/:id/edit"
+                                    element={<UserEditPage />}
                                 />
                             </Route>
 
