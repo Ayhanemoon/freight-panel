@@ -10,7 +10,7 @@ import FormRenderer from 'shared/forms/FormRenderer';
 import { FormValues } from 'shared/forms/types/form';
 import DataTable from 'shared/components/DataTable/DataTable';
 
-import { userFormConfig } from 'features/accounts/forms/userForm';
+import { getUserFormConfig } from 'features/accounts/forms/userForm';
 import { useGetBranchesQuery } from 'features/freight/api/branchApi';
 import { userFormToCreateRequest } from 'features/accounts/forms/userMapping';
 import {
@@ -23,6 +23,7 @@ const UsersPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const navigate = useNavigate();
+  const userFormConfig = getUserFormConfig('create');
 
   const {
     data,

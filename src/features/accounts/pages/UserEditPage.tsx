@@ -13,7 +13,7 @@ import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
 import { FormValues } from 'shared/forms/types/form';
 
-import { userFormConfig } from 'features/accounts/forms/userForm';
+import { getUserFormConfig } from 'features/accounts/forms/userForm';
 import {
   userToFormValues,
   userFormToUpdateRequest,
@@ -27,6 +27,7 @@ import { useGetBranchesQuery } from 'features/freight/api/branchApi';
 const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const userFormConfig = getUserFormConfig('edit');
 
   const {
     data: user,
