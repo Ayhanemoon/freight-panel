@@ -76,7 +76,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       name={name}
                       label={fieldConfig.label}
                       checked={Boolean(field.value)}
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={
@@ -96,7 +96,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           ? field.value
                           : null
                       }
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       required={fieldConfig.required}
                       options={fieldConfig.options || []}
                       readOnly={fieldConfig.readOnly}
@@ -113,7 +113,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       name={name}
                       label={fieldConfig.label}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       options={fieldOptions?.[name] || fieldConfig.options || []}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
@@ -134,7 +134,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           ? field.value
                           : ''
                       }
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       options={(fieldConfig.options || []).map((option) => ({
                         label: option.label,
                         value: String(option.value),
@@ -158,7 +158,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           ? field.value
                           : ''
                       }
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={
@@ -179,7 +179,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           ? field.value
                           : ''
                       }
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={
@@ -199,7 +199,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           ? field.value
                           : ''
                       }
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={
@@ -219,7 +219,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           ? field.value
                           : null
                       }
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={
@@ -235,7 +235,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                       name={name}
                       label={fieldConfig.label}
                       value={Boolean(field.value)}
-                      onChange={field.onChange}
+                      onChange={(_, value) => field.onChange(value)}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={

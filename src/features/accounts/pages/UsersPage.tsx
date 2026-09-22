@@ -33,6 +33,7 @@ const UsersPage: React.FC = () => {
       mobile: '',
       email: '',
       branch: null,
+      password: '',
       is_active: true,
       is_mobile_verified: false,
     },

@@ -1,4 +1,5 @@
 import { FormConfig } from 'shared/forms/types/form';
+import { userValidationSchema } from 'features/accounts/forms/userValidation';
 
 export const userFormConfig: FormConfig = {
   fields: {
@@ -91,4 +92,5 @@ export const userFormConfig: FormConfig = {
       },
     },
   },
+  validationSchema: userValidationSchema,
 };

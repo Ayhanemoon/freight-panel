@@ -17,6 +17,11 @@ export const userValidationSchema: FormValidationSchema = yup.object({
     .number()
     .nullable(),
 
+  password: yup
+    .string()
+    .required('رمز عبور الزامی است')
+    .min(8, 'رمز عبور باید حداقل ۸ کاراکتر باشد'),
+
   is_active: yup
     .boolean(),
 
