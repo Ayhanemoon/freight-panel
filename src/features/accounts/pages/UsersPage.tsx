@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Paper, Stack, Typography } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
@@ -20,6 +22,7 @@ import { User } from 'features/accounts/types/user';
 const UsersPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const navigate = useNavigate();
 
   const {
     data,
@@ -111,6 +114,18 @@ const UsersPage: React.FC = () => {
     },
   ];
 
+
+  const userActions = [
+    {
+      key: 'view',
+      label: 'مشاهده',
+      icon: <VisibilityIcon fontSize="small" />,
+      onClick: (user: User) => {
+        navigate(`/dashboard/users/${user.id}`);
+      },
+    },
+  ];
+
   if (isLoading) {
     return (
       <div dir="rtl">
@@ -196,6 +211,7 @@ const UsersPage: React.FC = () => {
               getRowId={(user) => user.id}
               loading={isFetching}
               emptyMessage="کاربری وجود ندارد."
+              actions={userActions}
               pagination={{
                 page,
                 pageSize,
