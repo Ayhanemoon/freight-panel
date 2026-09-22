@@ -6,7 +6,7 @@ import { Button, Paper, Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
