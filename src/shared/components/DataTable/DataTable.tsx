@@ -128,18 +128,24 @@ const DataTable = <T,>({
 
     const disabled = action.disabled?.(row) ?? false;
 
+    const actionLabel =
+      typeof action.label === 'function'
+        ? action.label(row)
+        : action.label;
+
+    const actionIcon =
+      typeof action.icon === 'function'
+        ? action.icon(row)
+        : action.icon;
+
     return (
-      <Tooltip key={action.key} title={action.label}>
-        <span>
-          <IconButton
-            size="small"
-            onClick={() => action.onClick(row)}
-            disabled={disabled}
-            aria-label={action.label}
-          >
-            {action.icon}
-          </IconButton>
-        </span>
+      <Tooltip title={actionLabel}>
+        <IconButton
+          onClick={() => action.onClick(row)}
+          disabled={disabled}
+        >
+          {actionIcon}
+        </IconButton>
       </Tooltip>
     );
   };

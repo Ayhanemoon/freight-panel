@@ -6,6 +6,7 @@ import { Button, Paper, Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
@@ -18,6 +19,7 @@ import { userFormToCreateRequest } from 'features/accounts/forms/userMapping';
 import {
   useGetUsersQuery,
   useCreateUserMutation,
+  useActivateUserMutation,
   useDeactivateUserMutation
 } from 'features/accounts/api/userApi';
 import { User } from 'features/accounts/types/user';
@@ -42,6 +44,8 @@ const UsersPage: React.FC = () => {
   const { data: branchesData } = useGetBranchesQuery();
 
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+
+  const [activateUser, { isLoading: isActivating }] = useActivateUserMutation();
   
   const [deactivateUser, { isLoading: isDeactivating }] = useDeactivateUserMutation();
 
@@ -138,17 +142,34 @@ const UsersPage: React.FC = () => {
       },
     },
     {
-      key: 'deactivate',
-      label: 'غیرفعال کردن',
-      icon: <BlockIcon fontSize="small" />,
-      hidden: (user: User) => !user.is_active,
-      disabled: () => isDeactivating,
+      key: 'toggle-active',
+      label: (user: User) =>
+        user.is_active
+          ? 'غیرفعال کردن'
+          : 'فعال کردن',
+
+      icon: (user: User) =>
+        user.is_active ? (
+          <BlockIcon fontSize="small" />
+        ) : (
+          <CheckCircleIcon fontSize="small" />
+        ),
+
+      disabled: () =>
+        isDeactivating || isActivating,
+
       onClick: async (user: User) => {
         try {
-          await deactivateUser(String(user.id)).unwrap();
+          if (user.is_active) {
+            await deactivateUser(String(user.id)).unwrap();
+          } else {
+            await activateUser(String(user.id)).unwrap();
+          }
         } catch (error) {
           console.error(
-            'Deactivate user error:',
+            user.is_active
+              ? 'Deactivate user error:'
+              : 'Activate user error:',
             getApiError(error)
           );
         }

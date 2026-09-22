@@ -13,13 +13,12 @@ export interface DataTableColumn<T> {
 
 export interface DataTableAction<T> {
   key: string;
-  label: string;
-  icon: ReactNode;
+  label: string | ((row: T) => string);
+  icon: ReactNode | ((row: T) => ReactNode);
   onClick: (row: T) => void;
   hidden?: (row: T) => boolean;
   disabled?: (row: T) => boolean;
 }
-
 export interface DataTablePagination {
   page: number;
   pageSize: number;
