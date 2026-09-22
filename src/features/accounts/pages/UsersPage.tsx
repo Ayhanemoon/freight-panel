@@ -5,6 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Paper, Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
+import BlockIcon from '@mui/icons-material/Block';
 
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
@@ -17,6 +18,7 @@ import { userFormToCreateRequest } from 'features/accounts/forms/userMapping';
 import {
   useGetUsersQuery,
   useCreateUserMutation,
+  useDeactivateUserMutation
 } from 'features/accounts/api/userApi';
 import { User } from 'features/accounts/types/user';
 
@@ -39,8 +41,9 @@ const UsersPage: React.FC = () => {
 
   const { data: branchesData } = useGetBranchesQuery();
 
-  const [createUser, { isLoading: isCreating }] =
-    useCreateUserMutation();
+  const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+  
+  const [deactivateUser, { isLoading: isDeactivating }] = useDeactivateUserMutation();
 
   const branchOptions =
     branchesData?.results.map((branch) => ({
@@ -132,6 +135,23 @@ const UsersPage: React.FC = () => {
       icon: <EditIcon fontSize="small" />,
       onClick: (user: User) => {
         navigate(`/dashboard/users/${user.id}/edit`);
+      },
+    },
+    {
+      key: 'deactivate',
+      label: 'غیرفعال کردن',
+      icon: <BlockIcon fontSize="small" />,
+      hidden: (user: User) => !user.is_active,
+      disabled: () => isDeactivating,
+      onClick: async (user: User) => {
+        try {
+          await deactivateUser(String(user.id)).unwrap();
+        } catch (error) {
+          console.error(
+            'Deactivate user error:',
+            getApiError(error)
+          );
+        }
       },
     },
   ];

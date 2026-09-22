@@ -83,6 +83,24 @@ export const userApi = baseApi.injectEndpoints({
         { type: 'User', id: 'LIST' },
       ],
     }),
+
+    activateUser: builder.mutation<
+      User,
+      string
+    >({
+      query: (id) => ({
+        url: `accounts/api/v1/users/${id}/`,
+        method: 'PATCH',
+        body: {
+          is_active: true,
+        },
+      }),
+
+      invalidatesTags: (result, error, id) => [
+        { type: 'User', id },
+        { type: 'User', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -91,5 +109,6 @@ export const {
   useGetUserByIdQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
-  useDeactivateUserMutation,        
+  useDeactivateUserMutation,
+  useActivateUserMutation,
 } = userApi;  
