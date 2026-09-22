@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Paper, Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditIcon from '@mui/icons-material/Edit';
 
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
@@ -123,6 +124,14 @@ const UsersPage: React.FC = () => {
       icon: <VisibilityIcon fontSize="small" />,
       onClick: (user: User) => {
         navigate(`/dashboard/users/${user.id}`);
+      },
+    },
+    {
+      key: 'edit',
+      label: 'ویرایش',
+      icon: <EditIcon fontSize="small" />,
+      onClick: (user: User) => {
+        navigate(`/dashboard/users/${user.id}/edit`);
       },
     },
   ];
