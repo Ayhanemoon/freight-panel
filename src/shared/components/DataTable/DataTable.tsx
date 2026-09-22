@@ -301,11 +301,12 @@ const DataTable = <T,>({
               Number(event.target.value)
             )
           }
-          rowsPerPageOptions={[
-            { value: 10, label: convertToPersianDigits(10) },
-            { value: 20, label: convertToPersianDigits(20) },
-            { value: 50, label: convertToPersianDigits(50) },
-          ]}
+          rowsPerPageOptions={(
+            pagination.pageSizeOptions ?? [10, 20, 50]
+          ).map((pageSize) => ({
+            value: pageSize,
+            label: convertToPersianDigits(pageSize),
+          }))}
           labelDisplayedRows={({ from, to, count }) =>
             `${convertToPersianDigits(from)}–${convertToPersianDigits(to)} از ${convertToPersianDigits(count)}`
           }
