@@ -2,11 +2,22 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button, Paper, Stack, Typography } from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
@@ -20,7 +31,8 @@ import {
   useGetUsersQuery,
   useCreateUserMutation,
   useActivateUserMutation,
-  useDeactivateUserMutation
+  useDeactivateUserMutation,
+  useDeleteUserMutation
 } from 'features/accounts/api/userApi';
 import { User } from 'features/accounts/types/user';
 
@@ -48,6 +60,10 @@ const UsersPage: React.FC = () => {
   const [activateUser, { isLoading: isActivating }] = useActivateUserMutation();
   
   const [deactivateUser, { isLoading: isDeactivating }] = useDeactivateUserMutation();
+
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const branchOptions =
     branchesData?.results.map((branch) => ({
@@ -175,6 +191,15 @@ const UsersPage: React.FC = () => {
         }
       },
     },
+    {
+      key: 'delete',
+      label: 'حذف',
+      icon: <DeleteIcon fontSize="small" />,
+      disabled: () => isDeleting,
+      onClick: (user: User) => {
+        setUserToDelete(user);
+      },
+    },
   ];
 
   if (isLoading) {
@@ -278,6 +303,67 @@ const UsersPage: React.FC = () => {
           </Stack>
         </Paper>
       </Stack>
+
+      <Dialog
+        open={Boolean(userToDelete)}
+        onClose={() => {
+          if (!isDeleting) {
+            setUserToDelete(null);
+          }
+        }}
+        dir="rtl"
+      >
+        <DialogTitle>
+          حذف کاربر
+        </DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            آیا از حذف کاربر{' '}
+            <strong>
+              {userToDelete?.mobile}
+            </strong>{' '}
+            مطمئن هستید؟
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => setUserToDelete(null)}
+            disabled={isDeleting}
+          >
+            انصراف
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!userToDelete) {
+                return;
+              }
+
+              try {
+                await deleteUser(
+                  String(userToDelete.id)
+                ).unwrap();
+
+                setUserToDelete(null);
+              } catch (error) {
+                console.error(
+                  'Delete user error:',
+                  getApiError(error)
+                );
+              }
+            }}
+          >
+            {isDeleting
+              ? 'در حال حذف...'
+              : 'حذف'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
