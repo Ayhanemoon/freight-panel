@@ -139,7 +139,7 @@ const DataTable = <T,>({
         : action.icon;
 
     return (
-      <Tooltip title={actionLabel}>
+      <Tooltip key={action.key} title={actionLabel}>
         <IconButton
           onClick={() => action.onClick(row)}
           disabled={disabled}
