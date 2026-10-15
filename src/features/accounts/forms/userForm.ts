@@ -13,6 +13,7 @@ export const getUserFormConfig = (
     mobile: {
       type: 'text',
       label: 'شماره موبایل',
+      inputType: 'tel',
       required: true,
       readOnly: !isCreate,
       grid: { xs: 12, md: 6 },
@@ -21,6 +22,7 @@ export const getUserFormConfig = (
     email: {
       type: 'text',
       label: 'ایمیل',
+      inputType: 'email',
       grid: { xs: 12, md: 6 },
     },
 
