@@ -87,12 +87,23 @@ const UserDetailPage: React.FC = () => {
             اطلاعات کاربر
           </Typography>
 
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/dashboard/users')}
-          >
-            بازگشت
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="contained"
+              onClick={() =>
+                navigate(`/dashboard/users/${user.id}/edit`)
+              }
+            >
+              ویرایش کاربر
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/dashboard/users')}
+            >
+              بازگشت
+            </Button>
+          </Stack>
         </Stack>
 
         <Paper sx={{ p: 3 }}>
