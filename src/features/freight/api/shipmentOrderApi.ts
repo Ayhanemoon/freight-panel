@@ -4,7 +4,7 @@ import {
   ListQueryParams,
 } from 'shared/api/queryParams';
 import { PaginatedResponse } from 'shared/types/api';
-  import { ShipmentOrder } from 'features/freight/types/shipmentOrder';
+  import { ShipmentOrder, ShipmentOrderDetail } from 'features/freight/types/shipmentOrder';
   import { ShipmentStatusHistory } from 'features/freight/types/shipmentStatusHistory';
 
 export const shipmentOrderApi = baseApi.injectEndpoints({
@@ -17,7 +17,7 @@ export const shipmentOrderApi = baseApi.injectEndpoints({
         `freight/api/v1/shipment-orders/${buildQueryString(params)}`,
     }),
 
-    getShipmentOrderById: builder.query<ShipmentOrder, number | string>({
+    getShipmentOrderById: builder.query<ShipmentOrderDetail, number | string>({
       query: (id) => `freight/api/v1/shipment-orders/${id}/`,
     }),
 

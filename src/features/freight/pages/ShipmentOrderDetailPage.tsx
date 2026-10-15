@@ -209,12 +209,25 @@ const ShipmentOrderDetailPage: React.FC = () => {
 
             <Divider />
 
-            <DetailItem label="شناسه شعبه" value={order.branch} />
-            <DetailItem label="شناسه مشتری" value={order.customer} />
             <DetailItem
-              label="شناسه شرکت حمل‌ونقل ترجیحی"
-              value={order.preferred_freight_company}
+              label="شعبه"
+              value={`${order.branch.name} (${order.branch.code})`}
             />
+
+            <DetailItem
+              label="مشتری"
+              value={`${order.customer.display_name} - ${order.customer.mobile}`}
+            />
+
+            <DetailItem
+              label="شرکت حمل‌ونقل ترجیحی"
+              value={
+                order.preferred_freight_company
+                  ? `${order.preferred_freight_company.name} (${order.preferred_freight_company.code})`
+                  : '—'
+              }
+            />
+
             <DetailItem
               label="شرح محموله"
               value={order.shipment_description}
