@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -446,6 +446,55 @@ const ShipmentOrderFormPage: React.FC = () => {
     (isCustomer && isMembershipsLoading);
 
   // Route API loading failures through the global notification system.
+  const notifiedGuardError = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Wait until required data has loaded successfully.
+    if (
+      isLoading ||
+      (isEdit && isOrderError) ||
+      isBranchesError ||
+      isCustomersError ||
+      (isCustomer && isMembershipsError)
+    ) {
+      notifiedGuardError.current = null;
+      return;
+    }
+
+    let message: string | null = null;
+
+    if (!canManageShipmentOrders) {
+      message = 'شما مجوز ایجاد یا ویرایش سفارش ارسال را ندارید.';
+    } else if (isBranchManager && !capabilities.branch) {
+      message = 'برای حساب مدیر شعبه، شعبه‌ای تعریف نشده است.';
+    } else if (isCustomer && !customerProfile) {
+      message =
+        'حساب کاربری شما به پروفایل مشتری متصل نیست. لطفاً با پشتیبانی تماس بگیرید.';
+    }
+
+    if (!message) {
+      notifiedGuardError.current = null;
+      return;
+    }
+
+    // Avoid showing the same notification repeatedly on rerenders.
+    if (notifiedGuardError.current !== message) {
+      notifiedGuardError.current = message;
+      notifyError(message);
+    }
+  }, [
+    isLoading,
+    isEdit,
+    isOrderError,
+    isBranchesError,
+    isCustomersError,
+    isMembershipsError,
+    isCustomer,
+    canManageShipmentOrders,
+    isBranchManager,
+    capabilities.branch,
+    customerProfile,
+  ]);
   useEffect(() => {
     if (isEdit && isOrderError) {
       notifyError(getApiError(orderError).message);
@@ -501,11 +550,6 @@ const ShipmentOrderFormPage: React.FC = () => {
     return null;
   }
 
-  if (!canManageShipmentOrders) {
-    notifyError('شما مجوز ایجاد یا ویرایش سفارش ارسال را ندارید.');
-    return null;
-  }
-
   if (isEdit && order && order.status !== 'draft') {
     return (
       <Stack spacing={2} alignItems="flex-start" dir="rtl">
@@ -523,18 +567,6 @@ const ShipmentOrderFormPage: React.FC = () => {
         </Button>
       </Stack>
     );
-  }
-
-  if (isBranchManager && !capabilities.branch) {
-    notifyError('برای حساب مدیر شعبه، شعبه‌ای تعریف نشده است.');
-    return null;
-  }
-
-  if (isCustomer && !customerProfile) {
-    notifyError(
-      'حساب کاربری شما به پروفایل مشتری متصل نیست. لطفاً با پشتیبانی تماس بگیرید.'
-    );
-    return null;
   }
 
   if (isCustomer && activeMemberships.length === 0 && !isEdit) {
