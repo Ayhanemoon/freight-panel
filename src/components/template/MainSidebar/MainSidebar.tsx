@@ -1,3 +1,4 @@
+import { Label } from '@mui/icons-material';
 import clsx from 'clsx';
 import { NavLink, useLocation } from "react-router-dom"
 
@@ -11,6 +12,7 @@ const MainSidebar = ({ open, mobileMode, onClose }: SidebarProps) => {
   const navItems = [
     { to: '/dashboard', label: 'داشبورد' },
     { to: '/dashboard/users', label: 'مدیریت کاربران' },
+    { to: '/dashboard/customers', label: 'مدیریت مشتریان' },
   ]
   const location = useLocation();
   const isActive = (path: string) => {

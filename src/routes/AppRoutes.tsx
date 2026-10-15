@@ -13,6 +13,7 @@ import NotFoundPage from 'pages/NotFoundPage/NotFoundPage';
 import UsersPage from 'features/accounts/pages/UsersPage';
 import UserEditPage from 'features/accounts/pages/UserEditPage';
 import UserDetailPage from 'features/accounts/pages/UserDetailPage';
+import CustomersPage from 'features/freight/pages/CustomersPage';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -92,6 +93,7 @@ const isAuthenticated =
                                     path="users/:id/edit"
                                     element={<UserEditPage />}
                                 />
+                                <Route path="customers" element={<CustomersPage />} />
                             </Route>
 
                             {/* Error Page */}
