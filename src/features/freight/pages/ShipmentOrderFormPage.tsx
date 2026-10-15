@@ -1,16 +1,24 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
+  Alert,
   Button,
+  CircularProgress,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
 
 import FormRenderer from 'shared/forms/FormRenderer';
-import { FormValues, FormConfig } from 'shared/forms/types/form';
+import {
+  FormConfig,
+  FormFieldOptions,
+  FormValues,
+} from 'shared/forms/types/form';
+
 import { getApiError } from 'shared/api/apiError';
 import {
   notifyError,
@@ -19,10 +27,19 @@ import {
 import { crudMessages } from 'shared/feedback/crudMessages';
 
 import {
+  useGetCurrentUserCapabilitiesQuery,
+} from 'features/accounts/api/currentUserApi';
+
+import {
+  useGetCurrentCustomerActiveMembershipsQuery,
+} from 'features/freight/api/customerBranchMembershipApi';
+
+import {
   useGetShipmentOrderByIdQuery,
   useCreateShipmentOrderMutation,
   useUpdateShipmentOrderMutation,
 } from 'features/freight/api/shipmentOrderApi';
+
 import { useGetBranchesQuery } from 'features/freight/api/branchApi';
 import { useGetCustomersQuery } from 'features/freight/api/customerApi';
 import {
@@ -33,91 +50,10 @@ import {
   shipmentOrderToFormValues,
   shipmentOrderFormToRequest,
 } from 'features/freight/forms/shipmentOrderMapping';
+
 import {
   shipmentOrderValidationSchema,
 } from 'features/freight/forms/shipmentOrderValidation';
-
-const shipmentOrderFormConfig: FormConfig = {
-  fields: {
-    branch: {
-      type: 'select',
-      label: 'شعبه',
-      required: true,
-      grid: { xs: 12, md: 6 },
-    },
-    customer: {
-      type: 'select',
-      label: 'مشتری',
-      required: true,
-      grid: { xs: 12, md: 6 },
-    },
-    preferred_freight_company: {
-      type: 'select',
-      label: 'شرکت حمل‌ونقل ترجیحی',
-      grid: { xs: 12, md: 6 },
-      options: [{ label: 'بدون انتخاب', value: '' }],
-    },
-
-    sender_name: {
-      type: 'text',
-      label: 'نام فرستنده',
-      required: true,
-      grid: { xs: 12, md: 6 },
-    },
-    sender_mobile: {
-      type: 'text',
-      label: 'موبایل فرستنده',
-      inputType: 'tel',
-      required: true,
-      grid: { xs: 12, md: 6 },
-    },
-    sender_address: {
-      type: 'textarea',
-      label: 'آدرس فرستنده',
-      required: true,
-      grid: { xs: 12 },
-    },
-
-    receiver_name: {
-      type: 'text',
-      label: 'نام گیرنده',
-      required: true,
-      grid: { xs: 12, md: 6 },
-    },
-    receiver_mobile: {
-      type: 'text',
-      label: 'موبایل گیرنده',
-      inputType: 'tel',
-      required: true,
-      grid: { xs: 12, md: 6 },
-    },
-    receiver_address: {
-      type: 'textarea',
-      label: 'آدرس گیرنده',
-      required: true,
-      grid: { xs: 12 },
-    },
-
-    shipment_description: {
-      type: 'textarea',
-      label: 'شرح محموله',
-      grid: { xs: 12 },
-    },
-  },
-  validationSchema: shipmentOrderValidationSchema,
-  defaultValues: {
-    branch: '',
-    customer: '',
-    preferred_freight_company: '',
-    sender_name: '',
-    sender_mobile: '',
-    sender_address: '',
-    receiver_name: '',
-    receiver_mobile: '',
-    receiver_address: '',
-    shipment_description: '',
-  },
-};
 
 const ShipmentOrderFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -125,20 +61,59 @@ const ShipmentOrderFormPage: React.FC = () => {
   const isEdit = Boolean(id);
 
   const {
+    data: capabilities,
+    isLoading: isCapabilitiesLoading,
+    isError: isCapabilitiesError,
+    error: capabilitiesError,
+  } = useGetCurrentUserCapabilitiesQuery();
+
+  const roles = capabilities?.roles ?? [];
+  const isSuperAdmin = roles.includes('SuperAdmin');
+  const isBranchManager = roles.includes('BranchManager');
+  const isCustomer = roles.includes('Customer');
+
+  const canManageShipmentOrders =
+    isSuperAdmin || isBranchManager || isCustomer;
+
+  const {
     data: order,
     isLoading: isOrderLoading,
     isError: isOrderError,
     error: orderError,
   } = useGetShipmentOrderByIdQuery(id ?? '', {
-    skip: !id,
+    skip: !isEdit,
   });
 
-  const { data: branchesData } = useGetBranchesQuery();
-  const { data: customersData } = useGetCustomersQuery({
+  const {
+    data: branchesData,
+    isLoading: isBranchesLoading,
+    isError: isBranchesError,
+    error: branchesError,
+  } = useGetBranchesQuery();
+
+  const {
+    data: customersData,
+    isLoading: isCustomersLoading,
+    isError: isCustomersError,
+    error: customersError,
+  } = useGetCustomersQuery({
     page: 1,
     page_size: 100,
   });
-  const { data: companiesData } = useGetFreightCompaniesQuery({
+
+  const {
+    data: membershipsData,
+    isLoading: isMembershipsLoading,
+    isError: isMembershipsError,
+    error: membershipsError,
+  } = useGetCurrentCustomerActiveMembershipsQuery(undefined, {
+    skip: !isCustomer,
+  });
+
+  const {
+    data: companiesData,
+    isLoading: isCompaniesLoading,
+  } = useGetFreightCompaniesQuery({
     page: 1,
     page_size: 100,
   });
@@ -149,46 +124,295 @@ const ShipmentOrderFormPage: React.FC = () => {
   const [updateShipmentOrder, { isLoading: isUpdating }] =
     useUpdateShipmentOrderMutation();
 
+  const customers = customersData?.results ?? [];
+
+  const activeMemberships = (membershipsData?.results ?? []).filter(
+    (membership) => membership.status.toLowerCase() === 'active'
+  );
+
+  const customerProfile = customers[0];
+
+  const activeBranches = (branchesData?.results ?? []).filter(
+    (branch) => branch.is_active
+  );
+
+  const customerBranches = activeMemberships.map(
+    (membership) => membership.branch
+  );
+
+  // SuperAdmin can choose any active branch.
+  // Customers can choose only branches where they have active membership.
+  const branchOptions = isSuperAdmin
+    ? activeBranches.map((branch) => ({
+        label: `${branch.name} (${branch.code})`,
+        value: branch.id,
+      }))
+    : customerBranches.map((branch) => ({
+        label: branch.name,
+        value: branch.id,
+      }));
+
+  const customerOptions = customers.map((customer) => ({
+    label: `${customer.display_name} (${customer.mobile})`,
+    value: customer.id,
+  }));
+
+  const companyOptions = [
+    { label: 'بدون انتخاب', value: '' },
+    ...(companiesData?.results ?? [])
+      .filter((company) => company.is_active)
+      .map((company) => ({
+        label: company.name,
+        value: company.id,
+      })),
+  ];
+
+  // BranchManager always uses their assigned branch.
+  // Customer selects a branch only when creating an order with
+  // multiple active memberships. A draft order's branch is preserved.
+  const showBranchSelector =
+    isSuperAdmin ||
+    (isCustomer && !isEdit && activeMemberships.length > 1);
+
+  // Only staff roles that can assign a customer see this field.
+  const showCustomerSelector = isSuperAdmin || isBranchManager;
+
+  const formConfig: FormConfig = useMemo(() => {
+    const fields: FormConfig['fields'] = {};
+
+    if (showBranchSelector) {
+      fields.branch = {
+        type: 'select',
+        label: 'شعبه',
+        required: true,
+        grid: { xs: 12, md: 6 },
+      };
+    }
+
+    if (showCustomerSelector) {
+      fields.customer = {
+        type: 'select',
+        label: 'مشتری',
+        required: true,
+        grid: { xs: 12, md: 6 },
+      };
+    }
+
+    fields.preferred_freight_company = {
+      type: 'select',
+      label: 'شرکت حمل‌ونقل ترجیحی',
+      grid: { xs: 12, md: 6 },
+      options: companyOptions,
+    };
+
+    fields.sender_name = {
+      type: 'text',
+      label: 'نام فرستنده',
+      required: true,
+      grid: { xs: 12, md: 6 },
+    };
+
+    fields.sender_mobile = {
+      type: 'text',
+      label: 'موبایل فرستنده',
+      inputType: 'tel',
+      required: true,
+      grid: { xs: 12, md: 6 },
+    };
+
+    fields.sender_address = {
+      type: 'textarea',
+      label: 'آدرس فرستنده',
+      required: true,
+      grid: { xs: 12 },
+    };
+
+    fields.receiver_name = {
+      type: 'text',
+      label: 'نام گیرنده',
+      required: true,
+      grid: { xs: 12, md: 6 },
+    };
+
+    fields.receiver_mobile = {
+      type: 'text',
+      label: 'موبایل گیرنده',
+      inputType: 'tel',
+      required: true,
+      grid: { xs: 12, md: 6 },
+    };
+
+    fields.receiver_address = {
+      type: 'textarea',
+      label: 'آدرس گیرنده',
+      required: true,
+      grid: { xs: 12 },
+    };
+
+    fields.shipment_description = {
+      type: 'textarea',
+      label: 'شرح محموله',
+      grid: { xs: 12 },
+    };
+
+    return {
+      fields,
+      validationSchema: shipmentOrderValidationSchema,
+      defaultValues: {
+        branch: '',
+        customer: '',
+        preferred_freight_company: '',
+        sender_name: '',
+        sender_mobile: '',
+        sender_address: '',
+        receiver_name: '',
+        receiver_mobile: '',
+        receiver_address: '',
+        shipment_description: '',
+      },
+    };
+  }, [
+    showBranchSelector,
+    showCustomerSelector,
+    companyOptions,
+  ]);
+
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(shipmentOrderValidationSchema),
-    defaultValues: shipmentOrderFormConfig.defaultValues,
+    defaultValues: formConfig.defaultValues,
   });
 
+  // Populate existing order values in edit mode.
   useEffect(() => {
-    if (order && isEdit) {
+    if (isEdit && order) {
       reset(shipmentOrderToFormValues(order));
     }
-  }, [order, isEdit, reset]);
+  }, [isEdit, order, reset]);
 
-  const branchOptions =
-    branchesData?.results.map((branch) => ({
-      label: branch.name,
-      value: branch.id,
-    })) ?? [];
+  // Populate role-controlled values for new orders.
+  useEffect(() => {
+    if (isEdit || !capabilities) {
+      return;
+    }
 
-  const customerOptions =
-    customersData?.results.map((customer) => ({
-      label: `${customer.display_name} (${customer.mobile})`,
-      value: customer.id,
-    })) ?? [];
+    if (isBranchManager && capabilities.branch) {
+      setValue('branch', capabilities.branch.id, {
+        shouldValidate: true,
+      });
+    }
 
-  const companyOptions = [
-    { label: 'بدون انتخاب', value: '' },
-    ...(companiesData?.results.map((company) => ({
-      label: company.name,
-      value: company.id,
-    })) ?? []),
-  ];
+    if (isCustomer && customerProfile) {
+      setValue('customer', customerProfile.id, {
+        shouldValidate: true,
+      });
+    }
+
+    if (isCustomer && activeMemberships.length === 1) {
+      setValue('branch', activeMemberships[0].branch.id, {
+        shouldValidate: true,
+      });
+    }
+  }, [
+    isEdit,
+    capabilities,
+    isBranchManager,
+    isCustomer,
+    customerProfile,
+    activeMemberships,
+    setValue,
+  ]);
 
   const handleFormSubmit = async (values: FormValues) => {
-    const request = shipmentOrderFormToRequest(values);
-
     try {
+      if (!capabilities || !canManageShipmentOrders) {
+        notifyError('شما مجوز ایجاد یا ویرایش سفارش را ندارید.');
+        return;
+      }
+
+      if (isEdit && (!order || order.status !== 'draft')) {
+        notifyError('فقط سفارش‌های پیش‌نویس قابل ویرایش هستند.');
+        return;
+      }
+
+      let branchId: number;
+      let customerId: number;
+
+      if (isEdit && order) {
+        // The customer and branch are preserved for customer and
+        // branch-manager edits. SuperAdmin may choose a new branch.
+        branchId = isSuperAdmin
+          ? Number(values.branch)
+          : order.branch.id;
+
+        customerId = isCustomer
+          ? order.customer.id
+          : Number(values.customer);
+      } else if (isSuperAdmin) {
+        branchId = Number(values.branch);
+        customerId = Number(values.customer);
+      } else if (isBranchManager) {
+        if (!capabilities.branch) {
+          notifyError('برای حساب مدیر شعبه، شعبه‌ای تعریف نشده است.');
+          return;
+        }
+
+        branchId = capabilities.branch.id;
+        customerId = Number(values.customer);
+      } else {
+        if (!customerProfile) {
+          notifyError(
+            'حساب کاربری شما به پروفایل مشتری متصل نیست.'
+          );
+          return;
+        }
+
+        if (activeMemberships.length === 0) {
+          notifyError(
+            'برای ثبت سفارش، عضویت فعال در حداقل یک شعبه لازم است.'
+          );
+          return;
+        }
+
+        customerId = customerProfile.id;
+
+        branchId =
+          activeMemberships.length === 1
+            ? activeMemberships[0].branch.id
+            : Number(values.branch);
+
+        const validMembership = activeMemberships.some(
+          (membership) => membership.branch.id === branchId
+        );
+
+        if (!validMembership) {
+          notifyError('لطفاً یکی از شعب دارای عضویت فعال را انتخاب کنید.');
+          return;
+        }
+      }
+
+      if (!branchId || !customerId) {
+        notifyError('انتخاب شعبه و مشتری الزامی است.');
+        return;
+      }
+
+      const mappedRequest = shipmentOrderFormToRequest({
+        ...values,
+        branch: branchId,
+        customer: customerId,
+      });
+
+      const request = {
+        ...mappedRequest,
+        branch: branchId,
+        customer: customerId,
+      };
+
       if (isEdit && id) {
         const updated = await updateShipmentOrder({
           id,
@@ -218,53 +442,126 @@ const ShipmentOrderFormPage: React.FC = () => {
     }
   };
 
-  if (isEdit && isOrderLoading) {
+  const isLoading =
+    isCapabilitiesLoading ||
+    (isEdit && isOrderLoading) ||
+    isBranchesLoading ||
+    isCustomersLoading ||
+    isCompaniesLoading ||
+    (isCustomer && isMembershipsLoading);
+
+  if (isLoading) {
     return (
-      <div dir="rtl">
-        <Typography>در حال دریافت اطلاعات سفارش...</Typography>
-      </div>
+      <Stack
+        alignItems="center"
+        spacing={2}
+        sx={{ p: 4 }}
+        dir="rtl"
+      >
+        <CircularProgress />
+        <Typography>در حال دریافت اطلاعات فرم...</Typography>
+      </Stack>
+    );
+  }
+
+  if (isCapabilitiesError) {
+    return (
+      <Alert severity="error" dir="rtl">
+        {getApiError(capabilitiesError).message}
+      </Alert>
     );
   }
 
   if (isEdit && (isOrderError || !order)) {
     return (
-      <div dir="rtl">
-        <Stack spacing={2} alignItems="flex-start">
-          <Typography variant="h5">ویرایش سفارش ارسال</Typography>
-          <Typography color="error">
-            {isOrderError
-              ? getApiError(orderError).message
-              : 'سفارش پیدا نشد.'}
-          </Typography>
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/dashboard/shipment-orders')}
-          >
-            بازگشت به سفارش‌ها
-          </Button>
-        </Stack>
-      </div>
+      <Alert severity="error" dir="rtl">
+        {isOrderError
+          ? getApiError(orderError).message
+          : 'سفارش پیدا نشد.'}
+      </Alert>
+    );
+  }
+
+  if (isBranchesError) {
+    return (
+      <Alert severity="error" dir="rtl">
+        {getApiError(branchesError).message}
+      </Alert>
+    );
+  }
+
+  if (isCustomersError) {
+    return (
+      <Alert severity="error" dir="rtl">
+        {getApiError(customersError).message}
+      </Alert>
+    );
+  }
+
+  if (isCustomer && isMembershipsError) {
+    return (
+      <Alert severity="error" dir="rtl">
+        {getApiError(membershipsError).message}
+      </Alert>
+    );
+  }
+
+  if (!canManageShipmentOrders) {
+    return (
+      <Alert severity="error" dir="rtl">
+        شما مجوز ایجاد یا ویرایش سفارش ارسال را ندارید.
+      </Alert>
     );
   }
 
   if (isEdit && order && order.status !== 'draft') {
     return (
-      <div dir="rtl">
-        <Stack spacing={2} alignItems="flex-start">
-          <Typography variant="h5">ویرایش سفارش ارسال</Typography>
-          <Typography color="error">
-            فقط سفارش‌های پیش‌نویس از این صفحه قابل ویرایش هستند.
-          </Typography>
-          <Button
-            variant="outlined"
-            onClick={() => navigate(`/dashboard/shipment-orders/${id}`)}
-          >
-            بازگشت به جزئیات سفارش
-          </Button>
-        </Stack>
-      </div>
+      <Stack spacing={2} alignItems="flex-start" dir="rtl">
+        <Typography variant="h5">ویرایش سفارش ارسال</Typography>
+        <Alert severity="warning">
+          فقط سفارش‌های پیش‌نویس از این صفحه قابل ویرایش هستند.
+        </Alert>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            navigate(`/dashboard/shipment-orders/${id}`)
+          }
+        >
+          بازگشت به جزئیات سفارش
+        </Button>
+      </Stack>
     );
   }
+
+  if (isBranchManager && !capabilities?.branch) {
+    return (
+      <Alert severity="error" dir="rtl">
+        برای حساب مدیر شعبه، شعبه‌ای تعریف نشده است.
+      </Alert>
+    );
+  }
+
+  if (isCustomer && !customerProfile) {
+    return (
+      <Alert severity="error" dir="rtl">
+        حساب کاربری شما به پروفایل مشتری متصل نیست. لطفاً با پشتیبانی تماس بگیرید.
+      </Alert>
+    );
+  }
+
+  if (isCustomer && activeMemberships.length === 0 && !isEdit) {
+    return (
+      <Alert severity="warning" dir="rtl">
+        عضویت فعال در هیچ شعبه‌ای ندارید؛ تا زمان فعال‌شدن عضویت، امکان ثبت سفارش وجود ندارد.
+      </Alert>
+    );
+  }
+
+  const fieldOptions: FormFieldOptions = {
+    branch: branchOptions,
+    customer: customerOptions,
+    preferred_freight_company: companyOptions,
+  };
 
   return (
     <div dir="rtl">
@@ -294,6 +591,12 @@ const ShipmentOrderFormPage: React.FC = () => {
           </Button>
         </Stack>
 
+        {isCustomer && !isEdit && activeMemberships.length > 1 && (
+          <Alert severity="info">
+            شعبه سفارش را از بین شعب دارای عضویت فعال خود انتخاب کنید.
+          </Alert>
+        )}
+
         <Paper sx={{ p: 3 }}>
           <Stack
             component="form"
@@ -301,14 +604,10 @@ const ShipmentOrderFormPage: React.FC = () => {
             onSubmit={handleSubmit(handleFormSubmit)}
           >
             <FormRenderer
-              config={shipmentOrderFormConfig}
+              config={formConfig}
               control={control}
               errors={errors}
-              fieldOptions={{
-                branch: branchOptions,
-                customer: customerOptions,
-                preferred_freight_company: companyOptions,
-              }}
+              fieldOptions={fieldOptions}
             />
 
             <Stack direction="row" justifyContent="flex-start">
