@@ -79,6 +79,7 @@ const UsersPage: React.FC = () => {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(userFormConfig.validationSchema!),
@@ -98,6 +99,7 @@ const UsersPage: React.FC = () => {
     try {
       await createUser(request).unwrap();
        notifySuccess(crudMessages.created('کاربر'));
+       reset({ mobile: '', email: '', branch: null, password: '', is_active: true, is_mobile_verified: false, });
     } catch (error) {
       notifyError(getApiError(error).message);
     }
