@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -57,6 +57,17 @@ const UsersPage: React.FC = () => {
     page: page + 1,
     page_size: pageSize,
   });
+  useEffect(() => {
+    if (!isError || !error || page === 0) {
+      return;
+    }
+
+    const apiError = getApiError(error);
+
+    if (apiError.code === 'INVALID_PAGE') {
+      setPage((currentPage) => Math.max(0, currentPage - 1));
+    }
+  }, [isError, error, page]);
 
   const { data: branchesData } = useGetBranchesQuery();
 
