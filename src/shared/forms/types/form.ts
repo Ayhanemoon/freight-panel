@@ -21,6 +21,7 @@ export type FormFieldOptions = Record<string, SelectOption[]>;
 export interface FormFieldConfig {
   type: FieldType;
   label: string;
+  inputType?: 'text' | 'password' | 'email' | 'tel';
   required?: boolean;
   defaultValue?: unknown;
   readOnly?: boolean;

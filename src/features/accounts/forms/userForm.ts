@@ -42,6 +42,7 @@ export const getUserFormConfig = (
     fields.password = {
       type: 'text',
       label: 'رمز عبور',
+      inputType: 'password',
       required: true,
       grid: { xs: 12, md: 6 },
     };

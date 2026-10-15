@@ -159,6 +159,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
                           : ''
                       }
                       onChange={(_, value) => field.onChange(value)}
+                      inputType={fieldConfig.inputType}
                       required={fieldConfig.required}
                       readOnly={fieldConfig.readOnly}
                       error={

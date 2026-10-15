@@ -6,6 +6,7 @@ interface TextInputFieldProps {
   label: string;
   value: string;
   onChange: (name: string, value: string) => void;
+  inputType?: 'text' | 'password' | 'email' | 'tel';
   required?: boolean;
   error?: string;
   className?: string;
@@ -17,6 +18,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
   label,
   value,
   onChange,
+  inputType = 'text',
   required = false,
   error = '',
   className = '',
@@ -34,6 +36,7 @@ const TextInputField: React.FC<TextInputFieldProps> = ({
         label={label}
         name={name}
         value={value}
+        type={inputType}
         required={required}
         error={!!error}
         helperText={error}
