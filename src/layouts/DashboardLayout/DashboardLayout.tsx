@@ -4,6 +4,8 @@ import { Box, Grid, useMediaQuery, useTheme } from '@mui/material';
 import MainHeader from 'components/template/MainHeader/MainHeader';
 import MainSidebar from 'components/template/MainSidebar/MainSidebar';
 import MainOverlay from 'components/template/MainOverlay/MainOverlay';
+import { CurrentUserProvider } from
+  'features/accounts/context/CurrentUserContext';
 
 import './DashboardLayout.scss';
 
@@ -17,26 +19,28 @@ const DashboardLayout = () => {
   }
 
   return (
-    <Box dir="rtl" className="layout">
-      <MainHeader mobileMode={isMobile} onMenuClick={toggleSidebar} />
+    <CurrentUserProvider>
+      <Box dir="rtl" className="layout">
+        <MainHeader mobileMode={isMobile} onMenuClick={toggleSidebar} />
 
-      <Grid container className="layout__container" >
-        {/* Main content first in markup due to RTL */}
-        <Grid size={{ xs: 0, md: 2.25 }}>
-          <MainSidebar
-            open={sidebarOpen || !isMobile}
-            mobileMode={isMobile}
-            onClose={() => setSidebarOpen(false)}
-          />
+        <Grid container className="layout__container" >
+          {/* Main content first in markup due to RTL */}
+          <Grid size={{ xs: 0, md: 2.25 }}>
+            <MainSidebar
+              open={sidebarOpen || !isMobile}
+              mobileMode={isMobile}
+              onClose={() => setSidebarOpen(false)}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 9.75 }} className="layout__main">
+            <Outlet />
+          </Grid>
+
         </Grid>
-        <Grid size={{ xs: 12, md: 9.75 }} className="layout__main">
-          <Outlet />
-        </Grid>
 
-      </Grid>
-
-      {isMobile && sidebarOpen && <MainOverlay onClick={() => setSidebarOpen(false)} />}
-    </Box>
+        {isMobile && sidebarOpen && <MainOverlay onClick={() => setSidebarOpen(false)} />}
+      </Box>
+    </CurrentUserProvider>
   );
 };
 

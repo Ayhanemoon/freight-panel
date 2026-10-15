@@ -4,7 +4,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
-  Alert,
   Button,
   CircularProgress,
   Paper,
@@ -27,8 +26,8 @@ import {
 import { crudMessages } from 'shared/feedback/crudMessages';
 
 import {
-  useGetCurrentUserCapabilitiesQuery,
-} from 'features/accounts/api/currentUserApi';
+  useCurrentUserCapabilities,
+} from 'features/accounts/context/CurrentUserContext';
 
 import {
   useGetCurrentCustomerActiveMembershipsQuery,
@@ -60,14 +59,9 @@ const ShipmentOrderFormPage: React.FC = () => {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const {
-    data: capabilities,
-    isLoading: isCapabilitiesLoading,
-    isError: isCapabilitiesError,
-    error: capabilitiesError,
-  } = useGetCurrentUserCapabilitiesQuery();
+  const capabilities = useCurrentUserCapabilities();
 
-  const roles = capabilities?.roles ?? [];
+  const roles = capabilities.roles;
   const isSuperAdmin = roles.includes('SuperAdmin');
   const isBranchManager = roles.includes('BranchManager');
   const isCustomer = roles.includes('Customer');
@@ -297,7 +291,7 @@ const ShipmentOrderFormPage: React.FC = () => {
 
   // Populate role-controlled values for new orders.
   useEffect(() => {
-    if (isEdit || !capabilities) {
+    if (isEdit) {
       return;
     }
 
@@ -320,7 +314,7 @@ const ShipmentOrderFormPage: React.FC = () => {
     }
   }, [
     isEdit,
-    capabilities,
+    capabilities.branch,
     isBranchManager,
     isCustomer,
     customerProfile,
@@ -330,7 +324,7 @@ const ShipmentOrderFormPage: React.FC = () => {
 
   const handleFormSubmit = async (values: FormValues) => {
     try {
-      if (!capabilities || !canManageShipmentOrders) {
+      if (!canManageShipmentOrders) {
         notifyError('شما مجوز ایجاد یا ویرایش سفارش را ندارید.');
         return;
       }
@@ -344,8 +338,8 @@ const ShipmentOrderFormPage: React.FC = () => {
       let customerId: number;
 
       if (isEdit && order) {
-        // The customer and branch are preserved for customer and
-        // branch-manager edits. SuperAdmin may choose a new branch.
+        // Preserve the branch/customer for customer and branch-manager edits.
+        // SuperAdmin may choose a different branch.
         branchId = isSuperAdmin
           ? Number(values.branch)
           : order.branch.id;
@@ -391,7 +385,9 @@ const ShipmentOrderFormPage: React.FC = () => {
         );
 
         if (!validMembership) {
-          notifyError('لطفاً یکی از شعب دارای عضویت فعال را انتخاب کنید.');
+          notifyError(
+            'لطفاً یکی از شعب دارای عضویت فعال را انتخاب کنید.'
+          );
           return;
         }
       }
@@ -443,12 +439,40 @@ const ShipmentOrderFormPage: React.FC = () => {
   };
 
   const isLoading =
-    isCapabilitiesLoading ||
     (isEdit && isOrderLoading) ||
     isBranchesLoading ||
     isCustomersLoading ||
     isCompaniesLoading ||
     (isCustomer && isMembershipsLoading);
+
+  // Route API loading failures through the global notification system.
+  useEffect(() => {
+    if (isEdit && isOrderError) {
+      notifyError(getApiError(orderError).message);
+    }
+  }, [isEdit, isOrderError, orderError]);
+
+  useEffect(() => {
+    if (isBranchesError) {
+      notifyError(getApiError(branchesError).message);
+    }
+  }, [isBranchesError, branchesError]);
+
+  useEffect(() => {
+    if (isCustomersError) {
+      notifyError(getApiError(customersError).message);
+    }
+  }, [isCustomersError, customersError]);
+
+  useEffect(() => {
+    if (isCustomer && isMembershipsError) {
+      notifyError(getApiError(membershipsError).message);
+    }
+  }, [
+    isCustomer,
+    isMembershipsError,
+    membershipsError,
+  ]);
 
   if (isLoading) {
     return (
@@ -464,63 +488,31 @@ const ShipmentOrderFormPage: React.FC = () => {
     );
   }
 
-  if (isCapabilitiesError) {
-    return (
-      <Alert severity="error" dir="rtl">
-        {getApiError(capabilitiesError).message}
-      </Alert>
-    );
+  if (
+    (isEdit && isOrderError) ||
+    isBranchesError ||
+    isCustomersError ||
+    (isCustomer && isMembershipsError)
+  ) {
+    return null;
   }
 
-  if (isEdit && (isOrderError || !order)) {
-    return (
-      <Alert severity="error" dir="rtl">
-        {isOrderError
-          ? getApiError(orderError).message
-          : 'سفارش پیدا نشد.'}
-      </Alert>
-    );
-  }
-
-  if (isBranchesError) {
-    return (
-      <Alert severity="error" dir="rtl">
-        {getApiError(branchesError).message}
-      </Alert>
-    );
-  }
-
-  if (isCustomersError) {
-    return (
-      <Alert severity="error" dir="rtl">
-        {getApiError(customersError).message}
-      </Alert>
-    );
-  }
-
-  if (isCustomer && isMembershipsError) {
-    return (
-      <Alert severity="error" dir="rtl">
-        {getApiError(membershipsError).message}
-      </Alert>
-    );
+  if (isEdit && !order) {
+    return null;
   }
 
   if (!canManageShipmentOrders) {
-    return (
-      <Alert severity="error" dir="rtl">
-        شما مجوز ایجاد یا ویرایش سفارش ارسال را ندارید.
-      </Alert>
-    );
+    notifyError('شما مجوز ایجاد یا ویرایش سفارش ارسال را ندارید.');
+    return null;
   }
 
   if (isEdit && order && order.status !== 'draft') {
     return (
       <Stack spacing={2} alignItems="flex-start" dir="rtl">
         <Typography variant="h5">ویرایش سفارش ارسال</Typography>
-        <Alert severity="warning">
+        <Typography color="warning.main">
           فقط سفارش‌های پیش‌نویس از این صفحه قابل ویرایش هستند.
-        </Alert>
+        </Typography>
         <Button
           variant="outlined"
           onClick={() =>
@@ -533,27 +525,25 @@ const ShipmentOrderFormPage: React.FC = () => {
     );
   }
 
-  if (isBranchManager && !capabilities?.branch) {
-    return (
-      <Alert severity="error" dir="rtl">
-        برای حساب مدیر شعبه، شعبه‌ای تعریف نشده است.
-      </Alert>
-    );
+  if (isBranchManager && !capabilities.branch) {
+    notifyError('برای حساب مدیر شعبه، شعبه‌ای تعریف نشده است.');
+    return null;
   }
 
   if (isCustomer && !customerProfile) {
-    return (
-      <Alert severity="error" dir="rtl">
-        حساب کاربری شما به پروفایل مشتری متصل نیست. لطفاً با پشتیبانی تماس بگیرید.
-      </Alert>
+    notifyError(
+      'حساب کاربری شما به پروفایل مشتری متصل نیست. لطفاً با پشتیبانی تماس بگیرید.'
     );
+    return null;
   }
 
   if (isCustomer && activeMemberships.length === 0 && !isEdit) {
     return (
-      <Alert severity="warning" dir="rtl">
-        عضویت فعال در هیچ شعبه‌ای ندارید؛ تا زمان فعال‌شدن عضویت، امکان ثبت سفارش وجود ندارد.
-      </Alert>
+      <Stack spacing={2} dir="rtl">
+        <Typography color="warning.main">
+          عضویت فعال در هیچ شعبه‌ای ندارید؛ تا زمان فعال‌شدن عضویت، امکان ثبت سفارش وجود ندارد.
+        </Typography>
+      </Stack>
     );
   }
 
@@ -592,9 +582,9 @@ const ShipmentOrderFormPage: React.FC = () => {
         </Stack>
 
         {isCustomer && !isEdit && activeMemberships.length > 1 && (
-          <Alert severity="info">
+          <Typography color="info.main">
             شعبه سفارش را از بین شعب دارای عضویت فعال خود انتخاب کنید.
-          </Alert>
+          </Typography>
         )}
 
         <Paper sx={{ p: 3 }}>

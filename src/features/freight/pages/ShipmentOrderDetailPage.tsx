@@ -259,23 +259,26 @@ const ShipmentOrderDetailPage: React.FC = () => {
             جزئیات سفارش ارسال
           </Typography>
 
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/dashboard/shipment-orders')}
-          >
-            بازگشت به سفارش‌ها
-          </Button>
-          {order.status === 'draft' && (
+          <Stack  direction="row" spacing={1}>
             <Button
-              variant="contained"
-              onClick={handleSubmitOrder}
-              disabled={isSubmitting}
+              variant="outlined"
+              onClick={() => navigate('/dashboard/shipment-orders')}
             >
-              {isSubmitting
-                ? 'در حال ارسال...'
-                : 'ارسال سفارش برای بررسی'}
+              بازگشت به سفارش‌ها
             </Button>
-          )}
+            {order.status === 'draft' && (
+              <Button
+                variant="contained"
+                onClick={handleSubmitOrder}
+                disabled={isSubmitting}
+              >
+                {isSubmitting
+                  ? 'در حال ارسال...'
+                  : 'ارسال سفارش برای بررسی'}
+              </Button>
+            )}
+          </Stack>
+
         </Stack>
 
         <Paper sx={{ p: 3 }}>
