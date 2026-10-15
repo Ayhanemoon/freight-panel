@@ -23,6 +23,11 @@ import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
 import { FormValues } from 'shared/forms/types/form';
 import DataTable from 'shared/components/DataTable/DataTable';
+import {
+  notifySuccess,
+  notifyError,
+} from 'shared/feedback/notification';
+import { crudMessages } from 'shared/feedback/crudMessages';
 
 import { getUserFormConfig } from 'features/accounts/forms/userForm';
 import { useGetBranchesQuery } from 'features/freight/api/branchApi';
@@ -92,9 +97,9 @@ const UsersPage: React.FC = () => {
 
     try {
       await createUser(request).unwrap();
-      console.log('User created successfully');
+       notifySuccess(crudMessages.created('کاربر'));
     } catch (error) {
-      console.error('Create user error:', error);
+      notifyError(getApiError(error).message);
     }
   };
 
@@ -178,16 +183,13 @@ const UsersPage: React.FC = () => {
         try {
           if (user.is_active) {
             await deactivateUser(String(user.id)).unwrap();
+            notifySuccess(crudMessages.deactivated('کاربر'))
           } else {
             await activateUser(String(user.id)).unwrap();
+            notifySuccess(crudMessages.activated('کاربر'));
           }
         } catch (error) {
-          console.error(
-            user.is_active
-              ? 'Deactivate user error:'
-              : 'Activate user error:',
-            getApiError(error)
-          );
+          notifyError(getApiError(error).message);
         }
       },
     },
@@ -350,11 +352,9 @@ const UsersPage: React.FC = () => {
                 ).unwrap();
 
                 setUserToDelete(null);
+                notifySuccess(crudMessages.deleted('کاربر'));
               } catch (error) {
-                console.error(
-                  'Delete user error:',
-                  getApiError(error)
-                );
+                notifyError(getApiError(error).message);
               }
             }}
           >
