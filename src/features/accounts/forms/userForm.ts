@@ -27,7 +27,6 @@ export const getUserFormConfig = (
     branch: {
       type: 'select',
       label: 'شعبه',
-      required: true,
       grid: { xs: 12, md: 6 },
     },
 
