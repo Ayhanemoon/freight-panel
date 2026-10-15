@@ -16,6 +16,7 @@ import CustomersPage from 'features/freight/pages/CustomersPage';
 import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
 import ShipmentOrdersPage from 'features/freight/pages/ShipmentOrdersPage';
+import ShipmentOrderDetailPage from 'features/freight/pages/ShipmentOrderDetailPage';
 import FreightCompaniesPage from 'features/freight/pages/FreightCompaniesPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -99,6 +100,10 @@ const isAuthenticated =
                                 <Route
                                     path="freight-companies"
                                     element={<FreightCompaniesPage />}
+                                />
+                                <Route
+                                    path="shipment-orders/:id"
+                                    element={<ShipmentOrderDetailPage />}
                                 />
                                 <Route
                                     path="shipment-orders"

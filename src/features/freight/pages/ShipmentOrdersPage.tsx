@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Paper, Stack, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { IconButton } from '@mui/material';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
@@ -36,6 +39,8 @@ const formatDate = (value: string | null): string => {
 };
 
 const ShipmentOrdersPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
@@ -146,6 +151,15 @@ const ShipmentOrdersPage: React.FC = () => {
                   setPage(0);
                 },
               }}
+              actions={[
+                {
+                  key: 'view',
+                  label: 'مشاهده جزئیات',
+                  icon: <VisibilityOutlinedIcon />,
+                  onClick: (order) =>
+                    navigate(`/dashboard/shipment-orders/${order.id}`),
+                },
+              ]}
             />
           </Stack>
         </Paper>
