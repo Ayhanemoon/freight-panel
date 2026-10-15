@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+  Alert,
   Button,
   Divider,
   Paper,
@@ -14,6 +15,7 @@ import { getApiError } from 'shared/api/apiError';
 import {
   useGetShipmentOrderByIdQuery,
   useGetShipmentOrderStatusHistoryQuery,
+  useSubmitShipmentOrderMutation
 } from 'features/freight/api/shipmentOrderApi';
 import { useGetParcelsQuery } from 'features/freight/api/parcelApi';
 
@@ -79,6 +81,7 @@ const ShipmentOrderDetailPage: React.FC = () => {
     isLoading,
     isError,
     error,
+    refetch: refetchOrder,
   } = useGetShipmentOrderByIdQuery(id ?? '', {
     skip: !id,
   });
@@ -88,9 +91,38 @@ const ShipmentOrderDetailPage: React.FC = () => {
     isLoading: isHistoryLoading,
     isError: isHistoryError,
     error: historyError,
+    refetch: refetchHistory,
   } = useGetShipmentOrderStatusHistoryQuery(id ?? '', {
     skip: !id || !order,
   });
+
+  const [
+    submitShipmentOrder,
+    { isLoading: isSubmitting },
+  ] = useSubmitShipmentOrderMutation();
+
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleSubmitOrder = async () => {
+    if (!id) return;
+
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    try {
+      await submitShipmentOrder(id).unwrap();
+
+      await Promise.all([
+        refetchOrder(),
+        refetchHistory(),
+      ]);
+
+      setSubmitSuccess(true);
+    } catch (error) {
+      setSubmitError(getApiError(error).message);
+    }
+  };
 
   const [parcelPage, setParcelPage] = useState(0);
   const [parcelPageSize, setParcelPageSize] = useState(10);
@@ -228,8 +260,29 @@ const ShipmentOrderDetailPage: React.FC = () => {
           >
             بازگشت به سفارش‌ها
           </Button>
+          {order.status === 'draft' && (
+            <Button
+              variant="contained"
+              onClick={handleSubmitOrder}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? 'در حال ارسال...'
+                : 'ارسال سفارش برای بررسی'}
+            </Button>
+          )}
         </Stack>
+        {submitError && (
+          <Alert severity="error">
+            {submitError}
+          </Alert>
+        )}
 
+        {submitSuccess && (
+          <Alert severity="success">
+            سفارش با موفقیت برای بررسی ارسال شد.
+          </Alert>
+        )}
         <Paper sx={{ p: 3 }}>
           <Stack spacing={2}>
             <Typography variant="h6">

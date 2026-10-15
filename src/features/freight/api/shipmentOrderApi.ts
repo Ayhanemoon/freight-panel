@@ -28,6 +28,15 @@ export const shipmentOrderApi = baseApi.injectEndpoints({
       query: (id) =>
         `freight/api/v1/shipment-orders/${id}/status-history/`,
     }),
+    submitShipmentOrder: builder.mutation<
+      ShipmentOrderDetail,
+      number | string
+    >({
+      query: (id) => ({
+        url: `freight/api/v1/shipment-orders/${id}/submit/`,
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -35,4 +44,5 @@ export const {
   useGetShipmentOrdersQuery,
   useGetShipmentOrderByIdQuery,
   useGetShipmentOrderStatusHistoryQuery,
+  useSubmitShipmentOrderMutation,
 } = shipmentOrderApi;
