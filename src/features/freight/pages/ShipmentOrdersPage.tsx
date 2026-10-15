@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Paper, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { IconButton } from '@mui/material';
+import { Button } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import DataTable from 'shared/components/DataTable/DataTable';
@@ -124,9 +126,25 @@ const ShipmentOrdersPage: React.FC = () => {
   return (
     <div dir="rtl">
       <Stack spacing={3}>
-        <Typography variant="h4">
-          سفارش‌های ارسال
-        </Typography>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={2}
+        >
+          <Typography variant="h4">
+            سفارش‌های ارسال
+          </Typography>
+
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/dashboard/shipment-orders/new')}
+          >
+            سفارش جدید
+          </Button>
+        </Stack>
 
         <Paper sx={{ p: 3 }}>
           <Stack spacing={2}>
@@ -158,6 +176,13 @@ const ShipmentOrdersPage: React.FC = () => {
                   icon: <VisibilityOutlinedIcon />,
                   onClick: (order) =>
                     navigate(`/dashboard/shipment-orders/${order.id}`),
+                },
+                {
+                  key: 'edit',
+                  label: 'ویرایش سفارش',
+                  icon: <EditOutlinedIcon />,
+                  onClick: (order) =>
+                    navigate(`/dashboard/shipment-orders/${order.id}/edit`),
                 },
               ]}
             />

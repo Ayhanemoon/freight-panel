@@ -4,8 +4,27 @@ import {
   ListQueryParams,
 } from 'shared/api/queryParams';
 import { PaginatedResponse } from 'shared/types/api';
-  import { ShipmentOrder, ShipmentOrderDetail } from 'features/freight/types/shipmentOrder';
-  import { ShipmentStatusHistory } from 'features/freight/types/shipmentStatusHistory';
+import { ShipmentOrder, ShipmentOrderDetail } from 'features/freight/types/shipmentOrder';
+import { ShipmentStatusHistory } from 'features/freight/types/shipmentStatusHistory';
+
+export interface ShipmentOrderWriteRequest {
+  branch: number;
+  customer?: number;
+  preferred_freight_company?: number | null;
+  sender_name: string;
+  sender_mobile: string;
+  sender_address: string;
+  receiver_name: string;
+  receiver_mobile: string;
+  receiver_address: string;
+  shipment_description?: string;
+}
+
+export interface UpdateShipmentOrderArgs {
+  id: number | string;
+  data: Partial<ShipmentOrderWriteRequest>;
+}
+
 
 export const shipmentOrderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -37,6 +56,27 @@ export const shipmentOrderApi = baseApi.injectEndpoints({
         method: 'POST',
       }),
     }),
+    createShipmentOrder: builder.mutation<
+      ShipmentOrderDetail,
+      ShipmentOrderWriteRequest
+    >({
+      query: (body) => ({
+        url: 'freight/api/v1/shipment-orders/',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    updateShipmentOrder: builder.mutation<
+      ShipmentOrderDetail,
+      UpdateShipmentOrderArgs
+    >({
+      query: ({ id, data }) => ({
+        url: `freight/api/v1/shipment-orders/${id}/`,
+        method: 'PATCH',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -45,4 +85,6 @@ export const {
   useGetShipmentOrderByIdQuery,
   useGetShipmentOrderStatusHistoryQuery,
   useSubmitShipmentOrderMutation,
+  useCreateShipmentOrderMutation,
+  useUpdateShipmentOrderMutation,
 } = shipmentOrderApi;
