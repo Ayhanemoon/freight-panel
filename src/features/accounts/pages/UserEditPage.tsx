@@ -12,6 +12,12 @@ import {
 import { getApiError } from 'shared/api/apiError';
 import FormRenderer from 'shared/forms/FormRenderer';
 import { FormValues } from 'shared/forms/types/form';
+import {
+  notifySuccess,
+  notifyError,
+} from 'shared/feedback/notification';
+
+import { crudMessages } from 'shared/feedback/crudMessages';
 
 import { getUserFormConfig } from 'features/accounts/forms/userForm';
 import {
@@ -78,12 +84,10 @@ const UserEditPage: React.FC = () => {
         data: request,
       }).unwrap();
 
+      notifySuccess(crudMessages.updated('کاربر'));
       navigate(`/dashboard/users/${id}`);
     } catch (error) {
-      console.error(
-        'Update user error:',
-        getApiError(error)
-      );
+      notifyError(getApiError(error).message);
     }
   };
 
