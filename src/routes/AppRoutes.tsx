@@ -12,9 +12,10 @@ import ErrorBoundary from '@/components/hoc/ErrorBoundary';
 import NotFoundPage from 'pages/NotFoundPage/NotFoundPage';
 import UsersPage from 'features/accounts/pages/UsersPage';
 import UserEditPage from 'features/accounts/pages/UserEditPage';
-import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import CustomersPage from 'features/freight/pages/CustomersPage';
+import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
+import ShipmentOrdersPage from 'features/freight/pages/ShipmentOrdersPage';
 import FreightCompaniesPage from 'features/freight/pages/FreightCompaniesPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -98,6 +99,10 @@ const isAuthenticated =
                                 <Route
                                     path="freight-companies"
                                     element={<FreightCompaniesPage />}
+                                />
+                                <Route
+                                    path="shipment-orders"
+                                    element={<ShipmentOrdersPage />}
                                 />
                             </Route>
 

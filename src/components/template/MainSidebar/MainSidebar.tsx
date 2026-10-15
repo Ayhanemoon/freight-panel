@@ -14,6 +14,7 @@ const MainSidebar = ({ open, mobileMode, onClose }: SidebarProps) => {
     { to: '/dashboard/users', label: 'مدیریت کاربران' },
     { to: '/dashboard/customers', label: 'مدیریت مشتریان' },
     { to: '/dashboard/freight-companies', label: 'شرکت‌های حمل‌ونقل'},
+    { to: '/dashboard/shipment-orders', label: 'سفارش‌های ارسال' },
   ]
   const location = useLocation();
   const isActive = (path: string) => {
