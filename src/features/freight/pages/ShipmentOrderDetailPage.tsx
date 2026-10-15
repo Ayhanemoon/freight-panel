@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert,
   Button,
   Divider,
   Paper,
@@ -11,6 +10,10 @@ import {
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
+import {
+  notifySuccess,
+  notifyError,
+} from 'shared/feedback/notification';
 
 import {
   useGetShipmentOrderByIdQuery,
@@ -119,8 +122,10 @@ const ShipmentOrderDetailPage: React.FC = () => {
       ]);
 
       setSubmitSuccess(true);
+      notifySuccess('سفارش با موفقیت برای بررسی ارسال شد.')
     } catch (error) {
       setSubmitError(getApiError(error).message);
+      notifyError(submitError || 'درخواست شما با مشکل مواجه شد .')
     }
   };
 
@@ -272,17 +277,7 @@ const ShipmentOrderDetailPage: React.FC = () => {
             </Button>
           )}
         </Stack>
-        {submitError && (
-          <Alert severity="error">
-            {submitError}
-          </Alert>
-        )}
 
-        {submitSuccess && (
-          <Alert severity="success">
-            سفارش با موفقیت برای بررسی ارسال شد.
-          </Alert>
-        )}
         <Paper sx={{ p: 3 }}>
           <Stack spacing={2}>
             <Typography variant="h6">
