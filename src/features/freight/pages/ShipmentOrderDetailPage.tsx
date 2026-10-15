@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Button,
@@ -8,12 +8,17 @@ import {
   Typography,
 } from '@mui/material';
 
+import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
+
 import {
   useGetShipmentOrderByIdQuery,
   useGetShipmentOrderStatusHistoryQuery,
 } from 'features/freight/api/shipmentOrderApi';
+import { useGetParcelsQuery } from 'features/freight/api/parcelApi';
+
 import { ShipmentOrder } from 'features/freight/types/shipmentOrder';
+import { Parcel } from 'features/freight/types/parcel';
 
 const statusLabels: Record<ShipmentOrder['status'], string> = {
   draft: 'پیش‌نویس',
@@ -86,6 +91,89 @@ const ShipmentOrderDetailPage: React.FC = () => {
   } = useGetShipmentOrderStatusHistoryQuery(id ?? '', {
     skip: !id || !order,
   });
+
+  const [parcelPage, setParcelPage] = useState(0);
+  const [parcelPageSize, setParcelPageSize] = useState(10);
+
+  const {
+    data: parcelsData,
+    isLoading: areParcelsLoading,
+    isFetching: areParcelsFetching,
+    isError: areParcelsError,
+    error: parcelsError,
+  } = useGetParcelsQuery(
+    {
+      order: id ?? '',
+      page: parcelPage + 1,
+      page_size: parcelPageSize,
+    },
+    {
+      skip: !id || !order,
+    }
+  );
+
+  useEffect(() => {
+    if (!areParcelsError || parcelPage === 0) {
+      return;
+    }
+
+    const apiError = getApiError(parcelsError);
+
+    if (apiError.code === 'INVALID_PAGE') {
+      setParcelPage((currentPage) => Math.max(0, currentPage - 1));
+    }
+  }, [areParcelsError, parcelsError, parcelPage]);
+
+  const parcelColumns = [
+    {
+      key: 'parcel_number',
+      header: 'شماره بسته',
+      align: 'right' as const,
+      render: (parcel: Parcel) => parcel.parcel_number,
+    },
+    {
+      key: 'contents_description',
+      header: 'شرح محتویات',
+      align: 'right' as const,
+      render: (parcel: Parcel) => parcel.contents_description || '—',
+    },
+    {
+      key: 'declared_weight_kg',
+      header: 'وزن (کیلوگرم)',
+      align: 'right' as const,
+      render: (parcel: Parcel) => parcel.declared_weight_kg ?? '—',
+    },
+    {
+      key: 'dimensions',
+      header: 'ابعاد (سانتی‌متر)',
+      align: 'right' as const,
+      render: (parcel: Parcel) =>
+        [
+          parcel.declared_length_cm,
+          parcel.declared_width_cm,
+          parcel.declared_height_cm,
+        ].every((value) => value === null)
+          ? '—'
+          : `${parcel.declared_length_cm ?? '—'} × ${
+              parcel.declared_width_cm ?? '—'
+            } × ${parcel.declared_height_cm ?? '—'}`,
+    },
+    {
+      key: 'verification_status',
+      header: 'وضعیت بررسی',
+      align: 'center' as const,
+      render: (parcel: Parcel) => {
+        const labels: Record<string, string> = {
+          pending: 'در انتظار بررسی',
+          verified: 'تأییدشده',
+          rejected: 'ردشده',
+        };
+
+        return labels[parcel.verification_status] ??
+          parcel.verification_status;
+      },
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -293,15 +381,43 @@ const ShipmentOrderDetailPage: React.FC = () => {
         </Paper>
 
         <Paper sx={{ p: 3 }}>
-          <Stack spacing={1}>
+          <Stack spacing={2}>
             <Typography variant="h6">
-              بسته‌ها
+              بسته‌های سفارش
             </Typography>
 
-            <Typography color="text.secondary">
-              نمایش بسته‌های این سفارش در مرحله بعد، پس از فراهم شدن
-              فیلتر معتبر بر اساس شناسه سفارش، اضافه می‌شود.
-            </Typography>
+            <Divider />
+
+            {areParcelsError ? (
+              <Typography color="error">
+                {getApiError(parcelsError).message}
+              </Typography>
+            ) : (
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  تعداد بسته‌ها: {parcelsData?.count ?? 0}
+                </Typography>
+
+                <DataTable<Parcel>
+                  rows={parcelsData?.results ?? []}
+                  columns={parcelColumns}
+                  getRowId={(parcel) => parcel.id}
+                  loading={areParcelsLoading || areParcelsFetching}
+                  emptyMessage="بسته‌ای برای این سفارش ثبت نشده است."
+                  pagination={{
+                    page: parcelPage,
+                    pageSize: parcelPageSize,
+                    total: parcelsData?.count ?? 0,
+                    pageSizeOptions: [10, 20, 50],
+                    onPageChange: setParcelPage,
+                    onPageSizeChange: (newPageSize) => {
+                      setParcelPageSize(newPageSize);
+                      setParcelPage(0);
+                    },
+                  }}
+                />
+              </>
+            )}
           </Stack>
         </Paper>
       </Stack>
