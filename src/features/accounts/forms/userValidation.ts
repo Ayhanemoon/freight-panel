@@ -15,6 +15,9 @@ export const userValidationSchema: FormValidationSchema = yup.object({
 
   branch: yup
     .number()
+    .transform((value, originalValue) =>
+      originalValue === '' ? null : value
+    )
     .nullable(),
 
   password: yup
