@@ -15,6 +15,7 @@ import UserEditPage from 'features/accounts/pages/UserEditPage';
 import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import CustomersPage from 'features/freight/pages/CustomersPage';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
+import FreightCompaniesPage from 'features/freight/pages/FreightCompaniesPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import 'react-toastify/dist/ReactToastify.css';
@@ -94,6 +95,10 @@ const isAuthenticated =
                                     element={<UserEditPage />}
                                 />
                                 <Route path="customers" element={<CustomersPage />} />
+                                <Route
+                                    path="freight-companies"
+                                    element={<FreightCompaniesPage />}
+                                />
                             </Route>
 
                             {/* Error Page */}
