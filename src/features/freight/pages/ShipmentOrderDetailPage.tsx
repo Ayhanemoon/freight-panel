@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Button,
   Divider,
   Paper,
   Stack,
   Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 
 import DataTable from 'shared/components/DataTable/DataTable';
@@ -14,14 +22,20 @@ import {
   notifySuccess,
   notifyError,
 } from 'shared/feedback/notification';
-
+import { crudMessages } from 'shared/feedback/crudMessages';
 import {
   useGetShipmentOrderByIdQuery,
   useGetShipmentOrderStatusHistoryQuery,
   useSubmitShipmentOrderMutation
 } from 'features/freight/api/shipmentOrderApi';
-import { useGetParcelsQuery } from 'features/freight/api/parcelApi';
-
+import {
+  useGetParcelsQuery,
+  useCreateParcelMutation,
+  useUpdateParcelMutation,
+  useDeleteParcelMutation,
+  ParcelWriteRequest,
+} from 'features/freight/api/parcelApi';
+import ParcelFormDialog from 'features/freight/components/ParcelFormDialog';
 import { ShipmentOrder } from 'features/freight/types/shipmentOrder';
 import { Parcel } from 'features/freight/types/parcel';
 
@@ -132,6 +146,18 @@ const ShipmentOrderDetailPage: React.FC = () => {
   const [parcelPage, setParcelPage] = useState(0);
   const [parcelPageSize, setParcelPageSize] = useState(10);
 
+  const [createParcel, { isLoading: isCreatingParcel }] = useCreateParcelMutation();
+
+  const [updateParcel, { isLoading: isUpdatingParcel }] = useUpdateParcelMutation();
+
+  const [deleteParcel, { isLoading: isDeletingParcel }] = useDeleteParcelMutation();
+
+  const [isParcelDialogOpen, setIsParcelDialogOpen] = useState(false);
+  const [parcelToEdit, setParcelToEdit] = useState<Parcel | null>(null);
+  const [parcelToDelete, setParcelToDelete] = useState<Parcel | null>(null);
+
+  const isSavingParcel = isCreatingParcel || isUpdatingParcel;
+
   const {
     data: parcelsData,
     isLoading: areParcelsLoading,
@@ -160,6 +186,66 @@ const ShipmentOrderDetailPage: React.FC = () => {
       setParcelPage((currentPage) => Math.max(0, currentPage - 1));
     }
   }, [areParcelsError, parcelsError, parcelPage]);
+
+  const handleOpenCreateParcel = () => {
+    setParcelToEdit(null);
+    setIsParcelDialogOpen(true);
+  };
+
+  const handleOpenEditParcel = (parcel: Parcel) => {
+    setParcelToEdit(parcel);
+    setIsParcelDialogOpen(true);
+  };
+
+  const handleCloseParcelDialog = () => {
+    if (isSavingParcel) return;
+
+    setIsParcelDialogOpen(false);
+    setParcelToEdit(null);
+  };
+
+  const handleSaveParcel = async (
+    data: ParcelWriteRequest
+  ) => {
+    try {
+      if (parcelToEdit) {
+        const { order: _order, ...patchData } = data;
+
+        await updateParcel({
+          id: parcelToEdit.id,
+          data: patchData,
+        }).unwrap();
+
+        notifySuccess(crudMessages.updated('بسته'));
+      } else {
+        await createParcel(data).unwrap();
+
+        setParcelPage(0);
+        notifySuccess(crudMessages.created('بسته'));
+      }
+
+      setIsParcelDialogOpen(false);
+      setParcelToEdit(null);
+    } catch (error) {
+      notifyError(getApiError(error).message);
+    }
+  };
+
+  const handleDeleteParcel = async () => {
+    if (!parcelToDelete || !id) return;
+
+    try {
+      await deleteParcel({
+        id: parcelToDelete.id,
+        order: id,
+      }).unwrap();
+
+      setParcelToDelete(null);
+      notifySuccess(crudMessages.deleted('بسته'));
+    } catch (error) {
+      notifyError(getApiError(error).message);
+    }
+  };
 
   const parcelColumns = [
     {
@@ -209,6 +295,25 @@ const ShipmentOrderDetailPage: React.FC = () => {
         return labels[parcel.verification_status] ??
           parcel.verification_status;
       },
+    },
+  ];
+
+  const parcelActions = [
+    {
+      key: 'edit',
+      label: 'ویرایش بسته',
+      icon: <EditIcon fontSize="small" />,
+      hidden: () => order?.status !== 'draft',
+      disabled: () => isSavingParcel || isDeletingParcel,
+      onClick: (parcel: Parcel) => handleOpenEditParcel(parcel),
+    },
+    {
+      key: 'delete',
+      label: 'حذف بسته',
+      icon: <DeleteIcon fontSize="small" />,
+      hidden: () => order?.status !== 'draft',
+      disabled: () => isSavingParcel || isDeletingParcel,
+      onClick: (parcel: Parcel) => setParcelToDelete(parcel),
     },
   ];
 
@@ -433,9 +538,27 @@ const ShipmentOrderDetailPage: React.FC = () => {
 
         <Paper sx={{ p: 3 }}>
           <Stack spacing={2}>
-            <Typography variant="h6">
-              بسته‌های سفارش
-            </Typography>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              flexWrap="wrap"
+              gap={2}
+            >
+              <Typography variant="h6">
+                بسته‌های سفارش
+              </Typography>
+
+              {order.status === 'draft' && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenCreateParcel}
+                >
+                  افزودن بسته
+                </Button>
+              )}
+            </Stack>
 
             <Divider />
 
@@ -466,12 +589,59 @@ const ShipmentOrderDetailPage: React.FC = () => {
                       setParcelPage(0);
                     },
                   }}
+                  actions={order.status === 'draft' ? parcelActions : []}
                 />
               </>
             )}
           </Stack>
         </Paper>
       </Stack>
+      <ParcelFormDialog
+        open={isParcelDialogOpen}
+        orderId={id ?? ''}
+        parcel={parcelToEdit}
+        isSubmitting={isSavingParcel}
+        onClose={handleCloseParcelDialog}
+        onSubmit={handleSaveParcel}
+      />
+
+      <Dialog
+        open={Boolean(parcelToDelete)}
+        onClose={() => {
+          if (!isDeletingParcel) {
+            setParcelToDelete(null);
+          }
+        }}
+        dir="rtl"
+      >
+        <DialogTitle>حذف بسته</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            آیا از حذف بسته شماره{' '}
+            <strong>{parcelToDelete?.parcel_number}</strong>{' '}
+            مطمئن هستید؟
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => setParcelToDelete(null)}
+            disabled={isDeletingParcel}
+          >
+            انصراف
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDeleteParcel}
+            disabled={isDeletingParcel}
+          >
+            {isDeletingParcel ? 'در حال حذف...' : 'حذف'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

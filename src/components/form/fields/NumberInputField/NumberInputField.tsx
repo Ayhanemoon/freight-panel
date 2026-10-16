@@ -5,14 +5,14 @@ interface NumberInputFieldProps {
   name: string;
   label: string;
   value: number | string;
-  onChange: (name: string, value: number) => void;
+  onChange: (name: string, value: number | string) => void;
   required?: boolean;
   min?: number;
   max?: number;
   step?: number;
   error?: string;
   className?: string;
-  readOnly?: boolean; // Optional readOnly prop
+  readOnly?: boolean;
 }
 
 const NumberInputField: React.FC<NumberInputFieldProps> = ({
@@ -28,9 +28,17 @@ const NumberInputField: React.FC<NumberInputFieldProps> = ({
   className = '',
   readOnly = false,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseFloat(e.target.value);
-    onChange(name, isNaN(newValue) ? 0 : newValue);
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value;
+
+    if (rawValue.trim() === '') {
+      onChange(name, '');
+      return;
+    }
+
+    const parsedValue = Number(rawValue);
+
+    onChange(name, Number.isFinite(parsedValue) ? parsedValue : rawValue);
   };
 
   return (
