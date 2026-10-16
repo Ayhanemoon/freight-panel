@@ -14,11 +14,15 @@ import {
   VerifyCollectionTaskParcelResponse,
 } from 'features/freight/types/collectionTask';
 
+export interface CollectionTaskListParams extends ListQueryParams {
+  branch?: number;
+}
+
 export const collectionTaskApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCollectionTasks: builder.query<
       PaginatedResponse<CollectionTask>,
-      ListQueryParams | void
+      CollectionTaskListParams | void
     >({
       query: (params) =>
         `freight/api/v1/collection-tasks/${buildQueryString(params)}`,

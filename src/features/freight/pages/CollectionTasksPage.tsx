@@ -1,12 +1,35 @@
 
-import React, { useEffect, useState } from 'react';
-import { Paper, Stack, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
+import {
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Stack,
+  Typography,
+} from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
-import { useGetCollectionTasksQuery } from 'features/freight/api/collectionTaskApi';
+
+import {
+  useGetCollectionTasksQuery,
+} from 'features/freight/api/collectionTaskApi';
+import {
+  useGetBranchesQuery,
+} from 'features/freight/api/branchApi';
+import {
+  useCurrentUserCapabilities,
+} from 'features/accounts/context/CurrentUserContext';
+import {
+  canViewCollectionTasks,
+  canFilterCollectionTasksByBranch,
+} from 'features/freight/permissions/collectionTaskAccess';
+
 import {
   CollectionTask,
   CollectionTaskStatus,
@@ -15,7 +38,7 @@ import {
 
 const statusLabels: Record<CollectionTaskStatus, string> = {
   pending: 'در انتظار تخصیص',
-  assigned: 'تخصیص‌ یافته',
+  assigned: 'تخصیص‌یافته',
   in_progress: 'در حال انجام',
   completed: 'تکمیل‌شده',
   cancelled: 'لغوشده',
@@ -39,9 +62,23 @@ const formatDate = (value: string | null): string => {
 
 const CollectionTasksPage: React.FC = () => {
   const navigate = useNavigate();
+  const user = useCurrentUserCapabilities();
+
+  const canViewTasks = canViewCollectionTasks(user);
+  const canFilterByBranch =
+    canFilterCollectionTasksByBranch(user);
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  const [selectedBranch, setSelectedBranch] = useState('');
+
+  const {
+    data: branchesData,
+    isError: isBranchesError,
+    error: branchesError,
+  } = useGetBranchesQuery(undefined, {
+    skip: !canFilterByBranch,
+  });
 
   const {
     data,
@@ -49,18 +86,40 @@ const CollectionTasksPage: React.FC = () => {
     isFetching,
     isError,
     error,
-  } = useGetCollectionTasksQuery({
-    page: page + 1,
-    page_size: pageSize,
-  });
-
-  useEffect(() => {
-    if (!isError || !error || page === 0) return;
-
-    if (getApiError(error).code === 'INVALID_PAGE') {
-      setPage((currentPage) => Math.max(0, currentPage - 1));
+  } = useGetCollectionTasksQuery(
+    {
+      page: page + 1,
+      page_size: pageSize,
+      ...(canFilterByBranch && selectedBranch
+        ? { branch: Number(selectedBranch) }
+        : {}),
+    },
+    {
+      skip: !canViewTasks,
     }
+  );
+
+  // Collection-task errors use the app-wide toast notification system.
+  useEffect(() => {
+    if (!isError || !error) return;
+
+    const apiError = getApiError(error);
+
+    // Recover from an invalid page without showing a redundant error toast.
+    if (apiError.code === 'INVALID_PAGE' && page > 0) {
+      setPage((currentPage) => Math.max(0, currentPage - 1));
+      return;
+    }
+
+    toast.error(apiError.message);
   }, [isError, error, page]);
+
+  // Branch lookup failures also use the global notification system.
+  useEffect(() => {
+    if (!isBranchesError || !branchesError) return;
+
+    toast.error(getApiError(branchesError).message);
+  }, [isBranchesError, branchesError]);
 
   const columns = [
     {
@@ -105,12 +164,15 @@ const CollectionTasksPage: React.FC = () => {
     },
   ];
 
-  if (isError) {
+  if (!canViewTasks) {
     return (
       <Stack spacing={2} dir="rtl">
-        <Typography variant="h4">وظایف جمع‌آوری</Typography>
-        <Typography color="error">
-          {getApiError(error).message}
+        <Typography variant="h4">
+          وظایف جمع‌آوری
+        </Typography>
+
+        <Typography color="text.secondary">
+          شما مجوز مشاهده وظایف جمع‌آوری را ندارید.
         </Typography>
       </Stack>
     );
@@ -124,6 +186,37 @@ const CollectionTasksPage: React.FC = () => {
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
+          {canFilterByBranch && (
+            <FormControl fullWidth>
+              <InputLabel id="collection-task-branch-label">
+                فیلتر بر اساس شعبه
+              </InputLabel>
+
+              <Select
+                labelId="collection-task-branch-label"
+                value={selectedBranch}
+                label="فیلتر بر اساس شعبه"
+                onChange={(event) => {
+                  setSelectedBranch(event.target.value);
+                  setPage(0);
+                }}
+              >
+                <MenuItem value="">
+                  همه شعب
+                </MenuItem>
+
+                {(branchesData?.results ?? []).map((branch) => (
+                  <MenuItem
+                    key={branch.id}
+                    value={String(branch.id)}
+                  >
+                    {branch.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
           <Typography variant="body2" color="text.secondary">
             تعداد وظایف: {data?.count ?? 0}
           </Typography>
