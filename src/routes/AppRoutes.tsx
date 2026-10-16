@@ -15,6 +15,7 @@ import UserEditPage from 'features/accounts/pages/UserEditPage';
 import CustomersPage from 'features/freight/pages/CustomersPage';
 import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
+import CollectionTasksPage from 'features/freight/pages/CollectionTasksPage';
 import ShipmentOrdersPage from 'features/freight/pages/ShipmentOrdersPage';
 import ShipmentOrderFormPage from 'features/freight/pages/ShipmentOrderFormPage';
 import ShipmentOrderDetailPage from 'features/freight/pages/ShipmentOrderDetailPage';
@@ -117,6 +118,10 @@ const isAuthenticated =
                                 <Route
                                     path="shipment-orders"
                                     element={<ShipmentOrdersPage />}
+                                />
+                                <Route
+                                    path="collection-tasks"
+                                    element={<CollectionTasksPage />}
                                 />
                             </Route>
 

@@ -1,0 +1,166 @@
+
+import React, { useEffect, useState } from 'react';
+import { Paper, Stack, Typography } from '@mui/material';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import { useNavigate } from 'react-router-dom';
+
+import DataTable from 'shared/components/DataTable/DataTable';
+import { getApiError } from 'shared/api/apiError';
+import { useGetCollectionTasksQuery } from 'features/freight/api/collectionTaskApi';
+import {
+  CollectionTask,
+  CollectionTaskStatus,
+  CollectionTaskType,
+} from 'features/freight/types/collectionTask';
+
+const statusLabels: Record<CollectionTaskStatus, string> = {
+  pending: 'در انتظار تخصیص',
+  assigned: 'تخصیص‌ یافته',
+  in_progress: 'در حال انجام',
+  completed: 'تکمیل‌شده',
+  cancelled: 'لغوشده',
+  failed: 'ناموفق',
+};
+
+const taskTypeLabels: Record<CollectionTaskType, string> = {
+  customer_delivery: 'تحویل توسط مشتری',
+  customer_pickup: 'دریافت از مشتری',
+};
+
+const formatDate = (value: string | null): string => {
+  if (!value) return '—';
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime())
+    ? '—'
+    : date.toLocaleString('fa-IR');
+};
+
+const CollectionTasksPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+  } = useGetCollectionTasksQuery({
+    page: page + 1,
+    page_size: pageSize,
+  });
+
+  useEffect(() => {
+    if (!isError || !error || page === 0) return;
+
+    if (getApiError(error).code === 'INVALID_PAGE') {
+      setPage((currentPage) => Math.max(0, currentPage - 1));
+    }
+  }, [isError, error, page]);
+
+  const columns = [
+    {
+      key: 'id',
+      header: 'شناسه وظیفه',
+      render: (task: CollectionTask) => task.id,
+    },
+    {
+      key: 'order',
+      header: 'شناسه سفارش',
+      render: (task: CollectionTask) => task.order,
+    },
+    {
+      key: 'task_type',
+      header: 'نوع دریافت',
+      render: (task: CollectionTask) =>
+        taskTypeLabels[task.task_type] ?? task.task_type,
+    },
+    {
+      key: 'collector',
+      header: 'شناسه جمع‌آورنده',
+      render: (task: CollectionTask) =>
+        task.collector ?? 'تخصیص داده نشده',
+    },
+    {
+      key: 'status',
+      header: 'وضعیت',
+      render: (task: CollectionTask) =>
+        statusLabels[task.status] ?? task.status,
+    },
+    {
+      key: 'scheduled_at',
+      header: 'زمان برنامه‌ریزی‌شده',
+      render: (task: CollectionTask) =>
+        formatDate(task.scheduled_at),
+    },
+    {
+      key: 'created_at',
+      header: 'تاریخ ایجاد',
+      render: (task: CollectionTask) =>
+        formatDate(task.created_at),
+    },
+  ];
+
+  if (isError) {
+    return (
+      <Stack spacing={2} dir="rtl">
+        <Typography variant="h4">وظایف جمع‌آوری</Typography>
+        <Typography color="error">
+          {getApiError(error).message}
+        </Typography>
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack spacing={3} dir="rtl">
+      <Typography variant="h4">
+        وظایف جمع‌آوری
+      </Typography>
+
+      <Paper sx={{ p: 3 }}>
+        <Stack spacing={2}>
+          <Typography variant="body2" color="text.secondary">
+            تعداد وظایف: {data?.count ?? 0}
+          </Typography>
+
+          <DataTable<CollectionTask>
+            rows={data?.results ?? []}
+            columns={columns}
+            getRowId={(task) => task.id}
+            loading={isLoading || isFetching}
+            emptyMessage="وظیفه جمع‌آوری‌ای ثبت نشده است."
+            pagination={{
+              page,
+              pageSize,
+              total: data?.count ?? 0,
+              pageSizeOptions: [10, 20, 50],
+              onPageChange: setPage,
+              onPageSizeChange: (newPageSize) => {
+                setPageSize(newPageSize);
+                setPage(0);
+              },
+            }}
+            actions={[
+              {
+                key: 'view',
+                label: 'مشاهده وظیفه',
+                icon: <VisibilityOutlinedIcon />,
+                onClick: (task) =>
+                  navigate(
+                    `/dashboard/collection-tasks/${task.id}`
+                  ),
+              },
+            ]}
+          />
+        </Stack>
+      </Paper>
+    </Stack>
+  );
+};
+
+export default CollectionTasksPage;
