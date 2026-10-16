@@ -24,7 +24,7 @@ const statusLabels: Record<CollectionTaskStatus, string> = {
 
 const taskTypeLabels: Record<CollectionTaskType, string> = {
   customer_delivery: 'تحویل توسط مشتری',
-  customer_pickup: 'دریافت از مشتری',
+  collector_pickup: 'جمع‌آوری از مشتری',
 };
 
 const formatDate = (value: string | null): string => {

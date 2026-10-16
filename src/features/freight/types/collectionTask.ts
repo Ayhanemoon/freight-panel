@@ -1,7 +1,7 @@
 
 export type CollectionTaskType =
   | 'customer_delivery'
-  | 'customer_pickup';
+  | 'collector_pickup';
 
 export type CollectionTaskStatus =
   | 'pending'
