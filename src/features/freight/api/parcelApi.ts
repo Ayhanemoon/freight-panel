@@ -26,6 +26,11 @@ export interface UpdateParcelArgs {
   data: Partial<ParcelWriteRequest>;
 }
 
+export interface DeleteParcelArgs {
+  id: number | string;
+  order: number | string;
+}
+
 export const parcelApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getParcels: builder.query<
@@ -36,6 +41,7 @@ export const parcelApi = baseApi.injectEndpoints({
         `freight/api/v1/parcels/${buildQueryString(params)}`,
       providesTags: (_result, _error, { order }) => [
         { type: 'Parcel', id: `ORDER-${order}` },
+        { type: 'Parcel', id: 'LIST' },
       ],
     }),
 
@@ -47,6 +53,7 @@ export const parcelApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _error, { order }) => [
         { type: 'Parcel', id: `ORDER-${order}` },
+        { type: 'Parcel', id: 'LIST' },
       ],
     }),
 
@@ -56,23 +63,28 @@ export const parcelApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: (_result, _error, { id, data }) => [
-        ...(data.order !== undefined
-          ? [{ type: 'Parcel' as const, id: `ORDER-${data.order}` }]
-          : []),
-        { type: 'Parcel' as const, id },
-        { type: 'Parcel' as const, id: 'LIST' },
-      ],
+      invalidatesTags: (result, _error, { id, data }) => {
+        const order = result?.order ?? data.order;
+
+        return [
+          { type: 'Parcel', id },
+          { type: 'Parcel', id: 'LIST' },
+          ...(order !== undefined
+            ? [{ type: 'Parcel' as const, id: `ORDER-${order}` }]
+            : []),
+        ];
+      },
     }),
 
-    deleteParcel: builder.mutation<void, number | string>({
-      query: (id) => ({
+    deleteParcel: builder.mutation<void, DeleteParcelArgs>({
+      query: ({ id }) => ({
         url: `freight/api/v1/parcels/${id}/`,
         method: 'DELETE',
       }),
-      invalidatesTags: (_result, _error, id) => [
+      invalidatesTags: (_result, _error, { id, order }) => [
         { type: 'Parcel', id },
         { type: 'Parcel', id: 'LIST' },
+        { type: 'Parcel', id: `ORDER-${order}` },
       ],
     }),
   }),
