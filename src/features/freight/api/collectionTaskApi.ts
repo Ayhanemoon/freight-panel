@@ -18,6 +18,13 @@ export interface CollectionTaskListParams extends ListQueryParams {
   branch?: number;
 }
 
+export interface CreateCollectionTaskRequest {
+  order: number;
+  task_type: CollectionTask['task_type'];
+  scheduled_at: string | null;
+  notes: string;
+}
+
 export const collectionTaskApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCollectionTasks: builder.query<
@@ -32,6 +39,20 @@ export const collectionTaskApi = baseApi.injectEndpoints({
           type: 'CollectionTask' as const,
           id: task.id,
         })),
+      ],
+    }),
+
+    createCollectionTask: builder.mutation<
+      CollectionTask,
+      CreateCollectionTaskRequest
+    >({
+      query: (body) => ({
+        url: 'freight/api/v1/collection-tasks/',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        { type: 'CollectionTask', id: 'LIST' },
       ],
     }),
 
@@ -128,6 +149,7 @@ export const collectionTaskApi = baseApi.injectEndpoints({
 
 export const {
   useGetCollectionTasksQuery,
+  useCreateCollectionTaskMutation,
   useGetCollectionTaskByIdQuery,
   useAssignCollectionTaskMutation,
   useVerifyCollectionTaskParcelMutation,
