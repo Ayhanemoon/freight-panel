@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import {
+  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -9,12 +10,13 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
+import { notifyError } from 'shared/feedback/notification';
 
 import {
   useGetCollectionTasksQuery,
@@ -27,6 +29,7 @@ import {
 } from 'features/accounts/context/CurrentUserContext';
 import {
   canViewCollectionTasks,
+  canCreateCollectionTasks,
   canFilterCollectionTasksByBranch,
 } from 'features/freight/permissions/collectionTaskAccess';
 
@@ -65,6 +68,7 @@ const CollectionTasksPage: React.FC = () => {
   const user = useCurrentUserCapabilities();
 
   const canViewTasks = canViewCollectionTasks(user);
+  const canCreateTasks = canCreateCollectionTasks(user);
   const canFilterByBranch =
     canFilterCollectionTasksByBranch(user);
 
@@ -99,26 +103,24 @@ const CollectionTasksPage: React.FC = () => {
     }
   );
 
-  // Collection-task errors use the app-wide toast notification system.
   useEffect(() => {
     if (!isError || !error) return;
 
     const apiError = getApiError(error);
 
-    // Recover from an invalid page without showing a redundant error toast.
+    // Recover from an invalid page without a redundant error toast.
     if (apiError.code === 'INVALID_PAGE' && page > 0) {
       setPage((currentPage) => Math.max(0, currentPage - 1));
       return;
     }
 
-    toast.error(apiError.message);
+    notifyError(apiError.message);
   }, [isError, error, page]);
 
-  // Branch lookup failures also use the global notification system.
   useEffect(() => {
     if (!isBranchesError || !branchesError) return;
 
-    toast.error(getApiError(branchesError).message);
+    notifyError(getApiError(branchesError).message);
   }, [isBranchesError, branchesError]);
 
   const columns = [
@@ -180,9 +182,29 @@ const CollectionTasksPage: React.FC = () => {
 
   return (
     <Stack spacing={3} dir="rtl">
-      <Typography variant="h4">
-        وظایف جمع‌آوری
-      </Typography>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap="wrap"
+        gap={2}
+      >
+        <Typography variant="h4">
+          وظایف جمع‌آوری
+        </Typography>
+
+        {canCreateTasks && (
+          <Button
+            variant="contained"
+            startIcon={<AddOutlinedIcon />}
+            onClick={() =>
+              navigate('/dashboard/collection-tasks/new')
+            }
+          >
+            ایجاد وظیفه
+          </Button>
+        )}
+      </Stack>
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
