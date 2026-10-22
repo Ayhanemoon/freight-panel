@@ -17,6 +17,7 @@ import UserDetailPage from 'features/accounts/pages/UserDetailPage';
 import DashboardLayout from '@/layouts/DashboardLayout/DashboardLayout';
 import CollectionTasksPage from 'features/freight/pages/CollectionTasksPage';
 import CollectionTaskFormPage from 'features/freight/pages/CollectionTaskFormPage';
+import CollectionTaskDetailPage from 'features/freight/pages/CollectionTaskDetailPage';
 import ShipmentOrdersPage from 'features/freight/pages/ShipmentOrdersPage';
 import ShipmentOrderFormPage from 'features/freight/pages/ShipmentOrderFormPage';
 import ShipmentOrderDetailPage from 'features/freight/pages/ShipmentOrderDetailPage';
@@ -123,6 +124,10 @@ const isAuthenticated =
                                 <Route
                                     path="collection-tasks/new"
                                     element={<CollectionTaskFormPage />}
+                                />
+                                <Route
+                                    path="collection-tasks/:id"
+                                    element={<CollectionTaskDetailPage />}
                                 />
                                 <Route
                                     path="collection-tasks"
