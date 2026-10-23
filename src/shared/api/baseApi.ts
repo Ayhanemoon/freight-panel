@@ -106,7 +106,7 @@ const baseApi = createApi({
 
   baseQuery: baseQueryWithReauth,
 
-  tagTypes: ['User', 'Parcel', 'CollectionTask'],
+  tagTypes: ['User', 'Parcel', 'CollectionTask', 'Invoice'],
 
   endpoints: () => ({}),
 });
