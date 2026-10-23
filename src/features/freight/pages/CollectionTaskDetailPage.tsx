@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
   Button,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Paper,
   Stack,
@@ -12,32 +17,48 @@ import {
 } from '@mui/material';
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import AssignmentIndOutlinedIcon from '@mui/icons-material/AssignmentIndOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 
 import { getApiError } from 'shared/api/apiError';
 import {
   notifyError,
   notifySuccess,
 } from 'shared/feedback/notification';
+import DataTable from 'shared/components/DataTable/DataTable';
 
 import {
   useAssignCollectionTaskMutation,
+  useCancelCollectionTaskMutation,
+  useCompleteCollectionTaskMutation,
+  useFailCollectionTaskMutation,
   useGetCollectionTaskByIdQuery,
+  useVerifyCollectionTaskParcelMutation,
 } from 'features/freight/api/collectionTaskApi';
 
-import {
-  useCurrentUserCapabilities,
-} from 'features/accounts/context/CurrentUserContext';
+import { useGetParcelsQuery } from 'features/freight/api/parcelApi';
 
 import {
   canAssignCollectionTasks,
+  canCancelCollectionTasks,
+  canCompleteCollectionTasks,
+  canFailCollectionTasks,
+  canVerifyCollectionTaskParcels,
   canViewCollectionTasks,
 } from 'features/freight/permissions/collectionTaskAccess';
 
+import { useCurrentUserCapabilities } from
+  'features/accounts/context/CurrentUserContext';
+
 import {
-  CollectionTask,
   CollectionTaskStatus,
   CollectionTaskType,
+  VerifyCollectionTaskParcelRequest,
 } from 'features/freight/types/collectionTask';
+
+import { Parcel } from 'features/freight/types/parcel';
 
 const statusLabels: Record<CollectionTaskStatus, string> = {
   pending: 'در انتظار تخصیص',
@@ -53,7 +74,16 @@ const taskTypeLabels: Record<CollectionTaskType, string> = {
   collector_pickup: 'جمع‌آوری از مشتری',
 };
 
-const formatDate = (value: string | null | undefined): string => {
+const verificationStatusLabels: Record<string, string> = {
+  pending: 'در انتظار بررسی',
+  verified: 'تأییدشده',
+  difference_found: 'دارای مغایرت',
+  rejected: 'ردشده',
+};
+
+const formatDate = (
+  value: string | null | undefined
+): string => {
   if (!value) return '—';
 
   const date = new Date(value);
@@ -83,6 +113,22 @@ const DetailItem: React.FC<DetailItemProps> = ({
   </Stack>
 );
 
+type TaskStatusAction = 'cancel' | 'fail' | null;
+
+interface VerificationFormValues {
+  verified_weight_kg: string;
+  verified_length_cm: string;
+  verified_width_cm: string;
+  verified_height_cm: string;
+}
+
+const emptyVerificationForm: VerificationFormValues = {
+  verified_weight_kg: '',
+  verified_length_cm: '',
+  verified_width_cm: '',
+  verified_height_cm: '',
+};
+
 const CollectionTaskDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -90,8 +136,13 @@ const CollectionTaskDetailPage: React.FC = () => {
 
   const canView = canViewCollectionTasks(user);
   const canAssign = canAssignCollectionTasks(user);
+  const canVerify = canVerifyCollectionTaskParcels(user);
+  const canComplete = canCompleteCollectionTasks(user);
+  const canCancel = canCancelCollectionTasks(user);
+  const canFail = canFailCollectionTasks(user);
 
-  const taskId = id && /^\d+$/.test(id) ? Number(id) : undefined;
+  const taskId =
+    id && /^\d+$/.test(id) ? Number(id) : undefined;
 
   const {
     data: task,
@@ -99,23 +150,76 @@ const CollectionTaskDetailPage: React.FC = () => {
     isFetching,
     isError,
     error,
-    refetch,
+    refetch: refetchTask,
   } = useGetCollectionTaskByIdQuery(taskId ?? '', {
     skip: !canView || taskId === undefined,
   });
+
+  const {
+    data: parcelsData,
+    isLoading: isParcelsLoading,
+    isFetching: isParcelsFetching,
+    isError: isParcelsError,
+    error: parcelsError,
+    refetch: refetchParcels,
+  } = useGetParcelsQuery(
+    {
+      order: task?.order ?? '',
+      page: 1,
+      page_size: 100,
+    },
+    {
+      skip: !task,
+    }
+  );
 
   const [
     assignCollectionTask,
     { isLoading: isAssigning },
   ] = useAssignCollectionTaskMutation();
 
-  const [collectorId, setCollectorId] = useState('');
+  const [
+    verifyCollectionTaskParcel,
+    { isLoading: isVerifying },
+  ] = useVerifyCollectionTaskParcelMutation();
 
-  useEffect(() => {
-    setCollectorId(
-      task?.collector != null ? String(task.collector) : ''
-    );
-  }, [task?.id, task?.collector]);
+  const [
+    completeCollectionTask,
+    { isLoading: isCompleting },
+  ] = useCompleteCollectionTaskMutation();
+
+  const [
+    cancelCollectionTask,
+    { isLoading: isCancelling },
+  ] = useCancelCollectionTaskMutation();
+
+  const [
+    failCollectionTask,
+    { isLoading: isFailing },
+  ] = useFailCollectionTaskMutation();
+
+  const [collectorId, setCollectorId] = useState('');
+  const [selectedParcel, setSelectedParcel] =
+    useState<Parcel | null>(null);
+
+  const [verificationForm, setVerificationForm] =
+    useState<VerificationFormValues>(emptyVerificationForm);
+
+  const [statusAction, setStatusAction] =
+    useState<TaskStatusAction>(null);
+
+  const [statusNote, setStatusNote] = useState('');
+
+  const isStatusActionLoading = isCancelling || isFailing;
+
+  const isTaskTerminal =
+    task?.status === 'completed' ||
+    task?.status === 'cancelled' ||
+    task?.status === 'failed';
+
+  const isTaskActive =
+    task?.status === 'assigned' ||
+    task?.status === 'in_progress';
 
   const handleAssign = async (
     event: React.FormEvent<HTMLFormElement>
@@ -145,9 +249,160 @@ const CollectionTaskDetailPage: React.FC = () => {
       }).unwrap();
 
       notifySuccess('جمع‌آورنده با موفقیت تخصیص داده شد.');
-      await refetch();
+      await refetchTask();
     } catch (assignmentError) {
       notifyError(getApiError(assignmentError).message);
+    }
+  };
+
+  const handleOpenVerification = (parcel: Parcel) => {
+    setSelectedParcel(parcel);
+
+    setVerificationForm({
+      verified_weight_kg: parcel.verified_weight_kg ?? parcel.declared_weight_kg ?? '',
+      verified_length_cm: parcel.verified_length_cm ?? parcel.declared_length_cm ?? '',
+      verified_width_cm: parcel.verified_width_cm ?? parcel.declared_width_cm ?? '',
+      verified_height_cm: parcel.verified_height_cm ?? parcel.declared_height_cm ?? '',
+    });
+  };
+
+  const handleCloseVerification = () => {
+    if (isVerifying) return;
+
+    setSelectedParcel(null);
+    setVerificationForm(emptyVerificationForm);
+  };
+
+  const handleVerifyParcel = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    if (!task || !selectedParcel || !canVerify) {
+      notifyError('شما مجوز بررسی بسته را ندارید.');
+      return;
+    }
+
+    const values = Object.values(verificationForm);
+
+    if (
+      values.some(
+        (value) =>
+          !value.trim() ||
+          !Number.isFinite(Number(value)) ||
+          Number(value) <= 0
+      )
+    ) {
+      notifyError('تمام اندازه‌ها باید عددی بزرگ‌تر از صفر باشند.');
+      return;
+    }
+
+    const request: VerifyCollectionTaskParcelRequest = {
+      parcel: selectedParcel.id,
+      ...verificationForm,
+    };
+
+    try {
+      const result = await verifyCollectionTaskParcel({
+        taskId: task.id,
+        data: request,
+      }).unwrap();
+
+      if (result.verification_status === 'difference_found') {
+        notifySuccess(
+          'اندازه‌های بسته ثبت شد؛ مغایرت با اطلاعات اعلام‌شده وجود دارد.'
+        );
+      } else {
+        notifySuccess('اندازه‌های بسته با موفقیت بررسی و ثبت شد.');
+      }
+
+      setSelectedParcel(null);
+      setVerificationForm(emptyVerificationForm);
+
+      await Promise.all([
+        refetchTask(),
+        refetchParcels(),
+      ]);
+    } catch (verificationError) {
+      notifyError(getApiError(verificationError).message);
+    }
+  };
+
+  const handleCompleteTask = async () => {
+    if (!task || !canComplete) {
+      notifyError('شما مجوز تکمیل وظیفه را ندارید.');
+      return;
+    }
+
+    try {
+      await completeCollectionTask(task.id).unwrap();
+
+      notifySuccess('وظیفه جمع‌آوری با موفقیت تکمیل شد.');
+      await refetchTask();
+    } catch (completionError) {
+      notifyError(getApiError(completionError).message);
+    }
+  };
+
+  const handleOpenStatusAction = (
+    action: Exclude<TaskStatusAction, null>
+  ) => {
+    setStatusAction(action);
+    setStatusNote('');
+  };
+
+  const handleCloseStatusAction = () => {
+    if (isStatusActionLoading) return;
+
+    setStatusAction(null);
+    setStatusNote('');
+  };
+
+  const handleSubmitStatusAction = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    if (!task || !statusAction) return;
+
+    try {
+      if (statusAction === 'cancel') {
+        if (!canCancel) {
+          notifyError('شما مجوز لغو وظیفه را ندارید.');
+          return;
+        }
+
+        await cancelCollectionTask({
+          id: task.id,
+          note: statusNote,
+        }).unwrap();
+
+        notifySuccess('وظیفه جمع‌آوری لغو شد.');
+      } else {
+        if (!canFail) {
+          notifyError('شما مجوز ثبت وظیفه ناموفق را ندارید.');
+          return;
+        }
+
+        if (!statusNote.trim()) {
+          notifyError('برای ثبت وظیفه ناموفق، دلیل را وارد کنید.');
+          return;
+        }
+
+        await failCollectionTask({
+          id: task.id,
+          note: statusNote,
+        }).unwrap();
+
+        notifySuccess('وضعیت وظیفه به ناموفق تغییر کرد.');
+      }
+
+      setStatusAction(null);
+      setStatusNote('');
+
+      await refetchTask();
+    } catch (statusError) {
+      notifyError(getApiError(statusError).message);
     }
   };
 
@@ -176,9 +431,9 @@ const CollectionTaskDetailPage: React.FC = () => {
   if (taskId === undefined) {
     return (
       <Stack spacing={2} dir="rtl">
-        <Typography variant="h5">
+        <Alert severity="error">
           شناسه وظیفه نامعتبر است.
-        </Typography>
+        </Alert>
 
         <Button
           variant="outlined"
@@ -224,7 +479,7 @@ const CollectionTaskDetailPage: React.FC = () => {
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Button
             variant="outlined"
-            onClick={() => void refetch()}
+            onClick={() => void refetchTask()}
           >
             تلاش مجدد
           </Button>
@@ -239,6 +494,78 @@ const CollectionTaskDetailPage: React.FC = () => {
       </Stack>
     );
   }
+
+  const parcels = parcelsData?.results ?? [];
+
+  const parcelColumns = [
+    {
+      key: 'parcel_number',
+      header: 'شماره بسته',
+      render: (parcel: Parcel) => parcel.parcel_number,
+    },
+    {
+      key: 'declared_weight_kg',
+      header: 'وزن اعلام‌شده',
+      render: (parcel: Parcel) =>
+        parcel.declared_weight_kg ?? '—',
+    },
+    {
+      key: 'verified_weight_kg',
+      header: 'وزن بررسی‌شده',
+      render: (parcel: Parcel) =>
+        parcel.verified_weight_kg ?? '—',
+    },
+    {
+      key: 'declared_dimensions',
+      header: 'ابعاد اعلام‌شده',
+      render: (parcel: Parcel) =>
+        [
+          parcel.declared_length_cm,
+          parcel.declared_width_cm,
+          parcel.declared_height_cm,
+        ].every((value) => value == null)
+          ? '—'
+          : `${parcel.declared_length_cm ?? '—'} × ${
+              parcel.declared_width_cm ?? '—'
+            } × ${parcel.declared_height_cm ?? '—'}`,
+    },
+    {
+      key: 'verified_dimensions',
+      header: 'ابعاد بررسی‌شده',
+      render: (parcel: Parcel) =>
+        [
+          parcel.verified_length_cm,
+          parcel.verified_width_cm,
+          parcel.verified_height_cm,
+        ].every((value) => value == null)
+          ? '—'
+          : `${parcel.verified_length_cm ?? '—'} × ${
+              parcel.verified_width_cm ?? '—'
+            } × ${parcel.verified_height_cm ?? '—'}`,
+    },
+    {
+      key: 'verification_status',
+      header: 'وضعیت بررسی',
+      render: (parcel: Parcel) =>
+        verificationStatusLabels[parcel.verification_status] ??
+        parcel.verification_status,
+    },
+  ];
+
+  const parcelActions = [
+    {
+      key: 'verify',
+      label: 'بررسی اندازه‌ها',
+      icon: <FactCheckOutlinedIcon fontSize="small" />,
+      hidden: (parcel: Parcel) =>
+        !canVerify ||
+        !isTaskActive ||
+        parcel.verification_status === 'verified' ||
+        parcel.verification_status === 'difference_found',
+      disabled: () => isVerifying,
+      onClick: (parcel: Parcel) => handleOpenVerification(parcel),
+    },
+  ];
 
   return (
     <Stack spacing={3} dir="rtl">
@@ -270,15 +597,8 @@ const CollectionTaskDetailPage: React.FC = () => {
 
           <Divider />
 
-          <DetailItem
-            label="شناسه وظیفه"
-            value={task.id}
-          />
-
-          <DetailItem
-            label="شناسه سفارش"
-            value={task.order}
-          />
+          <DetailItem label="شناسه وظیفه" value={task.id} />
+          <DetailItem label="شناسه سفارش" value={task.order} />
 
           <DetailItem
             label="نوع وظیفه"
@@ -327,7 +647,7 @@ const CollectionTaskDetailPage: React.FC = () => {
         </Stack>
       </Paper>
 
-      {canAssign && (
+      {canAssign && (task.status === 'pending' || task.status === 'assigned') && (
         <Paper sx={{ p: 3 }}>
           <Stack
             component="form"
@@ -342,7 +662,7 @@ const CollectionTaskDetailPage: React.FC = () => {
 
             <Typography variant="body2" color="text.secondary">
               شناسه کاربری جمع‌آورنده را وارد کنید. معتبر بودن
-              کاربر و مجاز بودن او برای این وظیفه در سمت سرور
+              کاربر، نقش او و تعلق او به شعبه سفارش در سمت سرور
               بررسی می‌شود.
             </Typography>
 
@@ -357,31 +677,291 @@ const CollectionTaskDetailPage: React.FC = () => {
               disabled={isAssigning}
             />
 
-            <Stack direction="row" justifyContent="flex-start">
+            <Stack direction="row">
               <Button
                 type="submit"
                 variant="contained"
                 startIcon={<AssignmentIndOutlinedIcon />}
-                disabled={
-                  isAssigning ||
-                  !collectorId.trim() ||
-                  task.status === 'completed' ||
-                  task.status === 'cancelled' ||
-                  task.status === 'failed'
-                }
+                disabled={isAssigning || !collectorId.trim()}
               >
                 {isAssigning
                   ? 'در حال تخصیص...'
-                  : task.collector != null
-                    ? 'تغییر جمع‌آورنده'
-                    : 'تخصیص جمع‌آورنده'}
+                  : 'تخصیص جمع‌آورنده'}
               </Button>
             </Stack>
           </Stack>
         </Paper>
       )}
+
+      <Paper sx={{ p: 3 }}>
+        <Stack spacing={2}>
+          <Typography variant="h6">
+            بسته‌های سفارش
+          </Typography>
+
+          <Divider />
+
+          {isParcelsError ? (
+            <Alert severity="error">
+              {getApiError(parcelsError).message}
+            </Alert>
+          ) : (
+            <>
+              <Typography variant="body2" color="text.secondary">
+                تعداد بسته‌ها: {parcelsData?.count ?? 0}
+              </Typography>
+
+              <DataTable<Parcel>
+                rows={parcels}
+                columns={parcelColumns}
+                getRowId={(parcel) => parcel.id}
+                loading={isParcelsLoading || isParcelsFetching}
+                emptyMessage="بسته‌ای برای این سفارش ثبت نشده است."
+                actions={isTaskActive ? parcelActions : []}
+              />
+            </>
+          )}
+        </Stack>
+      </Paper>
+
+      {!isTaskTerminal && (
+        <Paper sx={{ p: 3 }}>
+          <Stack spacing={2}>
+            <Typography variant="h6">
+              عملیات وظیفه
+            </Typography>
+
+            <Divider />
+
+            <Typography variant="body2" color="text.secondary">
+              تکمیل وظیفه فقط پس از بررسی همه بسته‌ها امکان‌پذیر
+              است. قوانین نهایی در سمت سرور بررسی می‌شوند.
+            </Typography>
+
+            <Stack
+              direction="row"
+              flexWrap="wrap"
+              gap={1}
+            >
+              {canComplete && task.status === 'in_progress' && (
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<CheckCircleOutlineIcon />}
+                  onClick={handleCompleteTask}
+                  disabled={isCompleting}
+                >
+                  {isCompleting
+                    ? 'در حال تکمیل...'
+                    : 'تکمیل وظیفه'}
+                </Button>
+              )}
+
+              {canCancel &&
+                ['pending', 'assigned', 'in_progress'].includes(
+                  task.status
+                ) && (
+                  <Button
+                    variant="outlined"
+                    color="warning"
+                    startIcon={<CancelOutlinedIcon />}
+                    onClick={() => handleOpenStatusAction('cancel')}
+                    disabled={isStatusActionLoading}
+                  >
+                    لغو وظیفه
+                  </Button>
+                )}
+
+              {canFail && task.status === 'in_progress' && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<ReportProblemOutlinedIcon />}
+                  onClick={() => handleOpenStatusAction('fail')}
+                  disabled={isStatusActionLoading}
+                >
+                  ثبت وظیفه ناموفق
+                </Button>
+              )}
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
+
+      <Dialog
+        open={Boolean(selectedParcel)}
+        onClose={handleCloseVerification}
+        fullWidth
+        maxWidth="sm"
+        dir="rtl"
+      >
+        <Stack
+          component="form"
+          onSubmit={handleVerifyParcel}
+        >
+          <DialogTitle>
+            بررسی اندازه‌های بسته
+            {selectedParcel
+              ? ` شماره ${selectedParcel.parcel_number}`
+              : ''}
+          </DialogTitle>
+
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                اندازه‌های واقعی بسته را وارد کنید. اگر این
+                مقادیر با اطلاعات اعلام‌شده تفاوت داشته باشند،
+                وضعیت بسته به «دارای مغایرت» تغییر خواهد کرد.
+              </Typography>
+
+              <TextField
+                label="وزن واقعی (کیلوگرم)"
+                type="number"
+                value={verificationForm.verified_weight_kg}
+                onChange={(event) =>
+                  setVerificationForm((current) => ({
+                    ...current,
+                    verified_weight_kg: event.target.value,
+                  }))
+                }
+                inputProps={{ min: 0.01, step: '0.01' }}
+                required
+                fullWidth
+                disabled={isVerifying}
+              />
+
+              <TextField
+                label="طول واقعی (سانتی‌متر)"
+                type="number"
+                value={verificationForm.verified_length_cm}
+                onChange={(event) =>
+                  setVerificationForm((current) => ({
+                    ...current,
+                    verified_length_cm: event.target.value,
+                  }))
+                }
+                inputProps={{ min: 0.01, step: '0.01' }}
+                required
+                fullWidth
+                disabled={isVerifying}
+              />
+
+              <TextField
+                label="عرض واقعی (سانتی‌متر)"
+                type="number"
+                value={verificationForm.verified_width_cm}
+                onChange={(event) =>
+                  setVerificationForm((current) => ({
+                    ...current,
+                    verified_width_cm: event.target.value,
+                  }))
+                }
+                inputProps={{ min: 0.01, step: '0.01' }}
+                required
+                fullWidth
+                disabled={isVerifying}
+              />
+
+              <TextField
+                label="ارتفاع واقعی (سانتی‌متر)"
+                type="number"
+                value={verificationForm.verified_height_cm}
+                onChange={(event) =>
+                  setVerificationForm((current) => ({
+                    ...current,
+                    verified_height_cm: event.target.value,
+                  }))
+                }
+                inputProps={{ min: 0.01, step: '0.01' }}
+                required
+                fullWidth
+                disabled={isVerifying}
+              />
+            </Stack>
+          </DialogContent>
+
+          <DialogActions>
+            <Button
+              onClick={handleCloseVerification}
+              disabled={isVerifying}
+            >
+              انصراف
+            </Button>
+
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isVerifying}
+            >
+              {isVerifying
+                ? 'در حال ثبت...'
+                : 'ثبت اندازه‌ها'}
+            </Button>
+          </DialogActions>
+        </Stack>
+      </Dialog>
+
+      <Dialog
+        open={statusAction !== null}
+        onClose={handleCloseStatusAction}
+        fullWidth
+        maxWidth="sm"
+        dir="rtl"
+      >
+        <Stack
+          component="form"
+          onSubmit={handleSubmitStatusAction}
+        >
+          <DialogTitle>
+            {statusAction === 'cancel'
+              ? 'لغو وظیفه جمع‌آوری'
+              : 'ثبت وظیفه ناموفق'}
+          </DialogTitle>
+
+          <DialogContent>
+            <DialogContentText sx={{ mb: 2 }}>
+              {statusAction === 'cancel'
+                ? 'در صورت نیاز، دلیل لغو را وارد کنید.'
+                : 'دلیل ناموفق بودن وظیفه را وارد کنید.'}
+            </DialogContentText>
+
+            <TextField
+              label="توضیحات"
+              value={statusNote}
+              onChange={(event) => setStatusNote(event.target.value)}
+              multiline
+              minRows={3}
+              fullWidth
+              required={statusAction === 'fail'}
+              disabled={isStatusActionLoading}
+            />
+          </DialogContent>
+
+          <DialogActions>
+            <Button
+              onClick={handleCloseStatusAction}
+              disabled={isStatusActionLoading}
+            >
+              انصراف
+            </Button>
+
+            <Button
+              type="submit"
+              variant="contained"
+              color={statusAction === 'fail' ? 'error' : 'warning'}
+              disabled={isStatusActionLoading}
+            >
+              {isStatusActionLoading
+                ? 'در حال ثبت...'
+                : statusAction === 'cancel'
+                  ? 'تأیید لغو'
+                  : 'ثبت ناموفق بودن'}
+            </Button>
+          </DialogActions>
+        </Stack>
+      </Dialog>
     </Stack>
   );
 };
 
-export default CollectionTaskDetailPage;  
+export default CollectionTaskDetailPage;
