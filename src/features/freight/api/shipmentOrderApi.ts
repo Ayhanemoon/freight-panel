@@ -129,6 +129,17 @@ export const shipmentOrderApi = baseApi.injectEndpoints({
         body: note?.trim() ? { note: note.trim() } : {},
       }),
     }),
+
+    receiveShipmentOrderAtBranch: builder.mutation<
+      ShipmentOrderDetail,
+      { id: number | string } & ShipmentOrderActionRequest
+    >({
+      query: ({ id, note }) => ({
+        url: `freight/api/v1/shipment-orders/${id}/receive-at-branch/`,
+        method: 'POST',
+        body: note?.trim() ? { note: note.trim() } : {},
+      }),
+    }),
   }),
 });
 
@@ -143,4 +154,5 @@ export const {
   useApproveShipmentOrderForCollectionMutation,
   useRejectShipmentOrderMutation,
   useCancelShipmentOrderMutation,
+  useReceiveShipmentOrderAtBranchMutation,
 } = shipmentOrderApi;

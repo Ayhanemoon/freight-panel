@@ -32,6 +32,7 @@ import {
   useApproveShipmentOrderForCollectionMutation,
   useRejectShipmentOrderMutation,
   useCancelShipmentOrderMutation,
+  useReceiveShipmentOrderAtBranchMutation,
 } from 'features/freight/api/shipmentOrderApi';
 import {
   useGetParcelsQuery,
@@ -64,6 +65,7 @@ const statusLabels: Record<ShipmentOrder['status'], string> = {
 type ShipmentOrderWorkflowAction =
   | 'start-review'
   | 'approve-collection'
+  | 'receive-at-branch'
   | 'reject'
   | 'cancel'
   | null;
@@ -150,6 +152,11 @@ const ShipmentOrderDetailPage: React.FC = () => {
     { isLoading: isCancelling },
   ] = useCancelShipmentOrderMutation();
 
+  const [
+    receiveShipmentOrderAtBranch,
+    { isLoading: isReceivingAtBranch },
+  ] = useReceiveShipmentOrderAtBranchMutation();
+
   const [workflowAction, setWorkflowAction] =
     useState<ShipmentOrderWorkflowAction>(null);
 
@@ -158,6 +165,7 @@ const ShipmentOrderDetailPage: React.FC = () => {
   const isWorkflowActionLoading =
     isStartingReview ||
     isApprovingCollection ||
+    isReceivingAtBranch ||
     isRejecting ||
     isCancelling;
 
@@ -249,6 +257,15 @@ const ShipmentOrderDetailPage: React.FC = () => {
           }).unwrap();
 
           notifySuccess('سفارش لغو شد.');
+          break;
+        
+        case 'receive-at-branch':
+          await receiveShipmentOrderAtBranch({
+            id,
+            note: workflowNote,
+          }).unwrap();
+
+          notifySuccess('دریافت سفارش در شعبه ثبت شد.');
           break;
       }
 
@@ -510,6 +527,17 @@ const ShipmentOrderDetailPage: React.FC = () => {
                 disabled={isWorkflowActionLoading}
               >
                 شروع بررسی
+              </Button>
+            )}
+
+            {order.status === 'collected' && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => handleOpenWorkflowAction('receive-at-branch')}
+                disabled={isWorkflowActionLoading}
+              >
+                ثبت دریافت در شعبه
               </Button>
             )}
 
@@ -834,6 +862,9 @@ const ShipmentOrderDetailPage: React.FC = () => {
             {workflowAction === 'approve-collection' &&
               'تأیید سفارش برای جمع‌آوری'}
 
+            {workflowAction === 'receive-at-branch' &&
+              'ثبت دریافت سفارش در شعبه'}
+
             {workflowAction === 'reject' &&
               'رد سفارش'}
 
@@ -848,6 +879,9 @@ const ShipmentOrderDetailPage: React.FC = () => {
 
               {workflowAction === 'approve-collection' &&
                 'در صورت نیاز، توضیحی برای تأیید سفارش ثبت کنید.'}
+
+              {workflowAction === 'receive-at-branch' &&
+                'پس از دریافت فیزیکی محموله در شعبه، این عملیات را ثبت کنید. در صورت نیاز توضیحی وارد کنید.'}
 
               {workflowAction === 'reject' &&
                 'دلیل رد سفارش را وارد کنید. ثبت دلیل الزامی است.'}
