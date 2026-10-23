@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -199,6 +199,11 @@ const CollectionTaskDetailPage: React.FC = () => {
   ] = useFailCollectionTaskMutation();
 
   const [collectorId, setCollectorId] = useState('');
+  useEffect(() => {
+    setCollectorId(
+      task?.collector != null ? String(task.collector) : ''
+    );
+  }, [task?.id, task?.collector]);
   const [selectedParcel, setSelectedParcel] =
     useState<Parcel | null>(null);
 
@@ -259,10 +264,14 @@ const CollectionTaskDetailPage: React.FC = () => {
     setSelectedParcel(parcel);
 
     setVerificationForm({
-      verified_weight_kg: parcel.verified_weight_kg ?? parcel.declared_weight_kg ?? '',
-      verified_length_cm: parcel.verified_length_cm ?? parcel.declared_length_cm ?? '',
-      verified_width_cm: parcel.verified_width_cm ?? parcel.declared_width_cm ?? '',
-      verified_height_cm: parcel.verified_height_cm ?? parcel.declared_height_cm ?? '',
+      verified_weight_kg:
+        parcel.declared_weight_kg ?? parcel.verified_weight_kg ?? '',
+      verified_length_cm:
+        parcel.declared_length_cm ?? parcel.verified_length_cm ?? '',
+      verified_width_cm:
+        parcel.declared_width_cm ?? parcel.verified_width_cm ?? '',
+      verified_height_cm:
+        parcel.declared_height_cm ?? parcel.verified_height_cm ?? '',
     });
   };
 
@@ -647,7 +656,7 @@ const CollectionTaskDetailPage: React.FC = () => {
         </Stack>
       </Paper>
 
-      {canAssign && (task.status === 'pending' || task.status === 'assigned') && (
+      {canAssign && !isTaskTerminal && (
         <Paper sx={{ p: 3 }}>
           <Stack
             component="form"
@@ -686,7 +695,10 @@ const CollectionTaskDetailPage: React.FC = () => {
               >
                 {isAssigning
                   ? 'در حال تخصیص...'
-                  : 'تخصیص جمع‌آورنده'}
+                  : task.collector != null
+                    ? 'تغییر جمع‌آورنده'
+                    : 'تخصیص جمع‌آورنده'
+                }
               </Button>
             </Stack>
           </Stack>
