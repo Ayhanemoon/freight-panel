@@ -13,7 +13,8 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  TextField,
 } from '@mui/material';
 
 import DataTable from 'shared/components/DataTable/DataTable';
@@ -26,7 +27,11 @@ import { crudMessages } from 'shared/feedback/crudMessages';
 import {
   useGetShipmentOrderByIdQuery,
   useGetShipmentOrderStatusHistoryQuery,
-  useSubmitShipmentOrderMutation
+  useSubmitShipmentOrderMutation,
+  useStartShipmentOrderReviewMutation,
+  useApproveShipmentOrderForCollectionMutation,
+  useRejectShipmentOrderMutation,
+  useCancelShipmentOrderMutation,
 } from 'features/freight/api/shipmentOrderApi';
 import {
   useGetParcelsQuery,
@@ -55,6 +60,13 @@ const statusLabels: Record<ShipmentOrder['status'], string> = {
   cancelled: 'لغوشده',
   rejected: 'ردشده',
 };
+
+type ShipmentOrderWorkflowAction =
+  | 'start-review'
+  | 'approve-collection'
+  | 'reject'
+  | 'cancel'
+  | null;
 
 const formatDate = (value: string | null): string => {
   if (!value) return '—';
@@ -118,6 +130,37 @@ const ShipmentOrderDetailPage: React.FC = () => {
     { isLoading: isSubmitting },
   ] = useSubmitShipmentOrderMutation();
 
+  const [
+    startShipmentOrderReview,
+    { isLoading: isStartingReview },
+  ] = useStartShipmentOrderReviewMutation();
+
+  const [
+    approveShipmentOrderForCollection,
+    { isLoading: isApprovingCollection },
+  ] = useApproveShipmentOrderForCollectionMutation();
+
+  const [
+    rejectShipmentOrder,
+    { isLoading: isRejecting },
+  ] = useRejectShipmentOrderMutation();
+
+  const [
+    cancelShipmentOrder,
+    { isLoading: isCancelling },
+  ] = useCancelShipmentOrderMutation();
+
+  const [workflowAction, setWorkflowAction] =
+    useState<ShipmentOrderWorkflowAction>(null);
+
+  const [workflowNote, setWorkflowNote] = useState('');
+
+  const isWorkflowActionLoading =
+    isStartingReview ||
+    isApprovingCollection ||
+    isRejecting ||
+    isCancelling;
+
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
@@ -140,6 +183,83 @@ const ShipmentOrderDetailPage: React.FC = () => {
     } catch (error) {
       setSubmitError(getApiError(error).message);
       notifyError(submitError || 'درخواست شما با مشکل مواجه شد .')
+    }
+  };
+
+  const handleOpenWorkflowAction = (
+    action: Exclude<ShipmentOrderWorkflowAction, null>
+  ) => {
+    setWorkflowAction(action);
+    setWorkflowNote('');
+  };
+
+  const handleCloseWorkflowAction = () => {
+    if (isWorkflowActionLoading) return;
+
+    setWorkflowAction(null);
+    setWorkflowNote('');
+  };
+
+  const handleSubmitWorkflowAction = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    if (!id || !workflowAction) return;
+
+    if (workflowAction === 'reject' && !workflowNote.trim()) {
+      notifyError('برای رد سفارش، ثبت دلیل الزامی است.');
+      return;
+    }
+
+    try {
+      switch (workflowAction) {
+        case 'start-review':
+          await startShipmentOrderReview({
+            id,
+            note: workflowNote,
+          }).unwrap();
+
+          notifySuccess('بررسی سفارش آغاز شد.');
+          break;
+
+        case 'approve-collection':
+          await approveShipmentOrderForCollection({
+            id,
+            note: workflowNote,
+          }).unwrap();
+
+          notifySuccess('سفارش برای جمع‌آوری تأیید شد.');
+          break;
+
+        case 'reject':
+          await rejectShipmentOrder({
+            id,
+            reason: workflowNote,
+          }).unwrap();
+
+          notifySuccess('سفارش رد شد.');
+          break;
+
+        case 'cancel':
+          await cancelShipmentOrder({
+            id,
+            note: workflowNote,
+          }).unwrap();
+
+          notifySuccess('سفارش لغو شد.');
+          break;
+      }
+
+      setWorkflowAction(null);
+      setWorkflowNote('');
+
+      await Promise.all([
+        refetchOrder(),
+        refetchHistory(),
+      ]);
+    } catch (actionError) {
+      notifyError(getApiError(actionError).message);
     }
   };
 
@@ -380,6 +500,59 @@ const ShipmentOrderDetailPage: React.FC = () => {
                 {isSubmitting
                   ? 'در حال ارسال...'
                   : 'ارسال سفارش برای بررسی'}
+              </Button>
+            )}
+            {order.status === 'submitted' && (
+              <Button
+                variant="contained"
+                onClick={() => handleOpenWorkflowAction('start-review')}
+                disabled={isWorkflowActionLoading}
+              >
+                شروع بررسی
+              </Button>
+            )}
+
+            {order.status === 'operator_review' && (
+              <>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() =>
+                    handleOpenWorkflowAction('approve-collection')
+                  }
+                  disabled={isWorkflowActionLoading}
+                >
+                  تأیید برای جمع‌آوری
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => handleOpenWorkflowAction('reject')}
+                  disabled={isWorkflowActionLoading}
+                >
+                  رد سفارش
+                </Button>
+              </>
+            )}
+
+            {[
+              'draft',
+              'submitted',
+              'operator_review',
+              'approved_for_collection',
+              'collected',
+              'received_at_branch',
+              'invoice_registered',
+              'ready_for_dispatch',
+            ].includes(order.status) && (
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={() => handleOpenWorkflowAction('cancel')}
+                disabled={isWorkflowActionLoading}
+              >
+                لغو سفارش
               </Button>
             )}
           </Stack>
@@ -641,6 +814,93 @@ const ShipmentOrderDetailPage: React.FC = () => {
             {isDeletingParcel ? 'در حال حذف...' : 'حذف'}
           </Button>
         </DialogActions>
+      </Dialog>
+      <Dialog
+        open={workflowAction !== null}
+        onClose={handleCloseWorkflowAction}
+        fullWidth
+        maxWidth="sm"
+        dir="rtl"
+      >
+        <Stack
+          component="form"
+          onSubmit={handleSubmitWorkflowAction}
+        >
+          <DialogTitle>
+            {workflowAction === 'start-review' &&
+              'شروع بررسی سفارش'}
+
+            {workflowAction === 'approve-collection' &&
+              'تأیید سفارش برای جمع‌آوری'}
+
+            {workflowAction === 'reject' &&
+              'رد سفارش'}
+
+            {workflowAction === 'cancel' &&
+              'لغو سفارش'}
+          </DialogTitle>
+
+          <DialogContent>
+            <DialogContentText sx={{ mb: 2 }}>
+              {workflowAction === 'start-review' &&
+                'در صورت نیاز، توضیحی برای شروع بررسی ثبت کنید.'}
+
+              {workflowAction === 'approve-collection' &&
+                'در صورت نیاز، توضیحی برای تأیید سفارش ثبت کنید.'}
+
+              {workflowAction === 'reject' &&
+                'دلیل رد سفارش را وارد کنید. ثبت دلیل الزامی است.'}
+
+              {workflowAction === 'cancel' &&
+                'در صورت نیاز، دلیل لغو سفارش را وارد کنید.'}
+            </DialogContentText>
+
+            <TextField
+              label={
+                workflowAction === 'reject'
+                  ? 'دلیل رد سفارش'
+                  : 'توضیحات'
+              }
+              value={workflowNote}
+              onChange={(event) => setWorkflowNote(event.target.value)}
+              multiline
+              minRows={3}
+              fullWidth
+              required={workflowAction === 'reject'}
+              inputProps={{ maxLength: 2000 }}
+              disabled={isWorkflowActionLoading}
+            />
+          </DialogContent>
+
+          <DialogActions>
+            <Button
+              onClick={handleCloseWorkflowAction}
+              disabled={isWorkflowActionLoading}
+            >
+              انصراف
+            </Button>
+
+            <Button
+              type="submit"
+              variant="contained"
+              color={
+                workflowAction === 'reject' ||
+                workflowAction === 'cancel'
+                  ? 'error'
+                  : 'primary'
+              }
+              disabled={
+                isWorkflowActionLoading ||
+                (workflowAction === 'reject' &&
+                  !workflowNote.trim())
+              }
+            >
+              {isWorkflowActionLoading
+                ? 'در حال ثبت...'
+                : 'تأیید و ثبت'}
+            </Button>
+          </DialogActions>
+        </Stack>
       </Dialog>
     </div>
   );

@@ -25,6 +25,14 @@ export interface UpdateShipmentOrderArgs {
   data: Partial<ShipmentOrderWriteRequest>;
 }
 
+export interface ShipmentOrderActionRequest {
+  note?: string;
+}
+
+export interface RejectShipmentOrderRequest {
+  reason: string;
+}
+
 
 export const shipmentOrderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -77,6 +85,50 @@ export const shipmentOrderApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+
+    startShipmentOrderReview: builder.mutation<
+      ShipmentOrderDetail,
+      { id: number | string } & ShipmentOrderActionRequest
+    >({
+      query: ({ id, note }) => ({
+        url: `freight/api/v1/shipment-orders/${id}/start-review/`,
+        method: 'POST',
+        body: note?.trim() ? { note: note.trim() } : {},
+      }),
+    }),
+
+    approveShipmentOrderForCollection: builder.mutation<
+      ShipmentOrderDetail,
+      { id: number | string } & ShipmentOrderActionRequest
+    >({
+      query: ({ id, note }) => ({
+        url: `freight/api/v1/shipment-orders/${id}/approve-collection/`,
+        method: 'POST',
+        body: note?.trim() ? { note: note.trim() } : {},
+      }),
+    }),
+
+    rejectShipmentOrder: builder.mutation<
+      ShipmentOrderDetail,
+      { id: number | string } & RejectShipmentOrderRequest
+    >({
+      query: ({ id, reason }) => ({
+        url: `freight/api/v1/shipment-orders/${id}/reject/`,
+        method: 'POST',
+        body: { reason: reason.trim() },
+      }),
+    }),
+
+    cancelShipmentOrder: builder.mutation<
+      ShipmentOrderDetail,
+      { id: number | string } & ShipmentOrderActionRequest
+    >({
+      query: ({ id, note }) => ({
+        url: `freight/api/v1/shipment-orders/${id}/cancel/`,
+        method: 'POST',
+        body: note?.trim() ? { note: note.trim() } : {},
+      }),
+    }),
   }),
 });
 
@@ -87,4 +139,8 @@ export const {
   useSubmitShipmentOrderMutation,
   useCreateShipmentOrderMutation,
   useUpdateShipmentOrderMutation,
+  useStartShipmentOrderReviewMutation,
+  useApproveShipmentOrderForCollectionMutation,
+  useRejectShipmentOrderMutation,
+  useCancelShipmentOrderMutation,
 } = shipmentOrderApi;
