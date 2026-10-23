@@ -181,8 +181,9 @@ const ShipmentOrderDetailPage: React.FC = () => {
       setSubmitSuccess(true);
       notifySuccess('سفارش با موفقیت برای بررسی ارسال شد.')
     } catch (error) {
-      setSubmitError(getApiError(error).message);
-      notifyError(submitError || 'درخواست شما با مشکل مواجه شد .')
+      const message = getApiError(error).message;
+      setSubmitError(message);
+      notifyError(message);
     }
   };
 
