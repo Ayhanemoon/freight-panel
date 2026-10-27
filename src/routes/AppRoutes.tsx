@@ -21,6 +21,7 @@ import CollectionTaskDetailPage from 'features/freight/pages/CollectionTaskDetai
 import ShipmentOrdersPage from 'features/freight/pages/ShipmentOrdersPage';
 import ShipmentOrderFormPage from 'features/freight/pages/ShipmentOrderFormPage';
 import ShipmentOrderDetailPage from 'features/freight/pages/ShipmentOrderDetailPage';
+import InvoicePrintPage from 'features/freight/pages/InvoicePrintPage';
 import FreightCompaniesPage from 'features/freight/pages/FreightCompaniesPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -134,6 +135,10 @@ const isAuthenticated =
                                     element={<CollectionTasksPage />}
                                 />
                             </Route>
+                            <Route
+                                path="/invoices/:id/print"
+                                element={<InvoicePrintPage />}
+                            />
 
                             {/* Error Page */}
                             <Route path="/error" element={<ErrorPage />} />

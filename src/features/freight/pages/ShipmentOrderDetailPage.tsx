@@ -42,6 +42,9 @@ import {
   ParcelWriteRequest,
 } from 'features/freight/api/parcelApi';
 import ParcelFormDialog from 'features/freight/components/ParcelFormDialog';
+import { useCreateInvoiceMutation } from 'features/freight/api/invoiceApi';
+import InvoiceRegistrationDialog from 'features/freight/components/InvoiceRegistrationDialog';
+import { CreateInvoiceRequest } from 'features/freight/types/invoice';
 import { ShipmentOrder } from 'features/freight/types/shipmentOrder';
 import { Parcel } from 'features/freight/types/parcel';
 
@@ -455,6 +458,28 @@ const ShipmentOrderDetailPage: React.FC = () => {
     },
   ];
 
+  
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+
+  const [createInvoice, { isLoading: isCreatingInvoice }] =
+    useCreateInvoiceMutation();
+
+  const handleCreateInvoice = async (data: CreateInvoiceRequest) => {
+    try {
+      const invoice = await createInvoice(data).unwrap();
+
+      notifySuccess('صورتحساب با موفقیت ثبت شد.');
+      setIsInvoiceDialogOpen(false);
+
+      await Promise.all([refetchOrder(), refetchHistory()]);
+
+      navigate(`/invoices/${invoice.id}/print`);
+    } catch (error) {
+      notifyError(getApiError(error).message);
+    }
+  };
+
+
   if (isLoading) {
     return (
       <div dir="rtl">
@@ -529,6 +554,18 @@ const ShipmentOrderDetailPage: React.FC = () => {
                 شروع بررسی
               </Button>
             )}
+
+            
+            {order.status === 'received_at_branch' && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => setIsInvoiceDialogOpen(true)}
+              >
+                ثبت صورتحساب و بیجک
+              </Button>
+            )}
+
 
             {order.status === 'collected' && (
               <Button
@@ -937,6 +974,19 @@ const ShipmentOrderDetailPage: React.FC = () => {
           </DialogActions>
         </Stack>
       </Dialog>
+      
+      <InvoiceRegistrationDialog
+        open={isInvoiceDialogOpen}
+        order={order}
+        isSubmitting={isCreatingInvoice}
+        onClose={() => {
+          if (!isCreatingInvoice) {
+            setIsInvoiceDialogOpen(false);
+          }
+        }}
+        onSubmit={handleCreateInvoice}
+      />
+
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 export type InvoiceChargeType =
   | 'freight'
   | 'insurance'
@@ -21,6 +22,22 @@ export interface InvoiceParcelInput {
   quantity?: number;
 }
 
+export interface InvoiceCharge extends InvoiceChargeInput {
+  id: number;
+  invoice: number;
+  created_at: string;
+}
+
+export interface InvoiceParcel {
+  id: number;
+  parcel: number;
+  parcel_number: number;
+  parcel_name: string;
+  parcel_type: string;
+  quantity: number;
+  created_at: string;
+}
+
 export interface Invoice {
   id: number;
   order: number;
@@ -33,6 +50,8 @@ export interface Invoice {
   receiver_name: string;
   receiver_mobile: string;
   receiver_address: string;
+  charges: InvoiceCharge[];
+  parcels: InvoiceParcel[];
   total_cost: string;
   notes: string;
   created_at: string;
