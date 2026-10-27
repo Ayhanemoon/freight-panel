@@ -16,9 +16,17 @@ const MainSidebar = ({ open, mobileMode, onClose }: SidebarProps) => {
     { to: '/dashboard/freight-companies', label: 'شرکت‌های حمل‌ونقل'},
     { to: '/dashboard/shipment-orders', label: 'سفارش‌های ارسال' },
     { to: '/dashboard/collection-tasks', label: 'جمع‌آوری بسته ها' },
+    { to: '/dashboard/invoices', label: 'صورتحساب‌ها' },
   ]
   const location = useLocation();
   const isActive = (path: string) => {
+    if (path === '/dashboard/invoices') {
+      return (
+        location.pathname === path ||
+        location.pathname.startsWith(`${path}/`)
+      );
+    }
+
     return location.pathname === path;
   };
    

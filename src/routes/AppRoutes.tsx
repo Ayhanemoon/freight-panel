@@ -21,6 +21,8 @@ import CollectionTaskDetailPage from 'features/freight/pages/CollectionTaskDetai
 import ShipmentOrdersPage from 'features/freight/pages/ShipmentOrdersPage';
 import ShipmentOrderFormPage from 'features/freight/pages/ShipmentOrderFormPage';
 import ShipmentOrderDetailPage from 'features/freight/pages/ShipmentOrderDetailPage';
+import InvoicesPage from 'features/freight/pages/InvoicesPage';
+import InvoiceDetailPage from 'features/freight/pages/InvoiceDetailPage';
 import InvoicePrintPage from 'features/freight/pages/InvoicePrintPage';
 import FreightCompaniesPage from 'features/freight/pages/FreightCompaniesPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -133,6 +135,14 @@ const isAuthenticated =
                                 <Route
                                     path="collection-tasks"
                                     element={<CollectionTasksPage />}
+                                />
+                                <Route
+                                    path="invoices/:id"
+                                    element={<InvoiceDetailPage />}
+                                />
+                                <Route
+                                    path="invoices"
+                                    element={<InvoicesPage />}
                                 />
                             </Route>
                             <Route
