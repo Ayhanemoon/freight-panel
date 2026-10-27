@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
-  FormControlLabel,
   MenuItem,
   Select,
   Stack,
@@ -35,7 +34,6 @@ import type {
   InvoiceChargeType,
   InvoicePayer,
 } from 'features/freight/types/invoice';
-import { Form } from 'react-router-dom';
 
 interface InvoiceRegistrationDialogProps {
   open: boolean;
