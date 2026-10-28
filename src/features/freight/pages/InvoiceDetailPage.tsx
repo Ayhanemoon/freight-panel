@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -11,11 +12,25 @@ import {
 } from '@mui/material';
 import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined';
 import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
-import { useGetInvoiceByIdQuery } from 'features/freight/api/invoiceApi';
-import { Invoice } from 'features/freight/types/invoice';
+import {
+  useGetInvoiceByIdQuery,
+  useUpdateInvoiceMutation,
+} from 'features/freight/api/invoiceApi';
+import { useGetShipmentOrderByIdQuery } from 'features/freight/api/shipmentOrderApi';
+import type {
+  Invoice,
+  UpdateInvoiceRequest,
+} from 'features/freight/types/invoice';
+import InvoiceEditDialog from 'features/freight/components/InvoiceEditDialog';
+
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
+import {
+  notifySuccess,
+  notifyError,
+} from 'shared/feedback/notification';
 import { convertToPersianDigits } from 'shared/utils/number';
 
 const chargeLabels: Record<string, string> = {
@@ -36,13 +51,15 @@ const formatDate = (value: string | null | undefined): string => {
     : date.toLocaleString('fa-IR');
 };
 
-const formatMoney = (value: string | number | null | undefined): string => {
+const formatMoney = (
+  value: string | number | null | undefined,
+): string => {
   const amount = Number(value ?? 0);
 
   if (!Number.isFinite(amount)) return '—';
 
   return convertToPersianDigits(
-    new Intl.NumberFormat('fa-IR').format(amount)
+    new Intl.NumberFormat('fa-IR').format(amount),
   );
 };
 
@@ -57,6 +74,7 @@ const DetailItem = ({
     <Typography variant="body2" color="text.secondary">
       {label}
     </Typography>
+
     <Typography sx={{ overflowWrap: 'anywhere' }}>
       {value === null || value === undefined || value === ''
         ? '—'
@@ -69,13 +87,62 @@ const InvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
   const {
     data: invoice,
     isLoading,
     isFetching,
     isError,
     error,
-  } = useGetInvoiceByIdQuery(id ?? '', { skip: !id });
+  } = useGetInvoiceByIdQuery(id ?? '', {
+    skip: !id,
+  });
+
+  const {
+    data: order,
+    isLoading: isOrderLoading,
+    isFetching: isOrderFetching,
+    isError: isOrderError,
+  } = useGetShipmentOrderByIdQuery(invoice?.order ?? '', {
+    skip: !invoice,
+  });
+
+  const [
+    updateInvoice,
+    { isLoading: isUpdatingInvoice },
+  ] = useUpdateInvoiceMutation();
+
+  // Invoice editing is available only before dispatch preparation.
+  // The backend must enforce this restriction independently.
+  const canEditInvoice =
+    !isOrderLoading &&
+    !isOrderFetching &&
+    !isOrderError &&
+    order?.status === 'invoice_registered';
+
+  const handleUpdateInvoice = async (
+    data: UpdateInvoiceRequest,
+  ) => {
+    if (!invoice || !canEditInvoice) {
+      notifyError(
+        'ویرایش صورتحساب در وضعیت فعلی سفارش امکان‌پذیر نیست.',
+      );
+      return;
+    }
+
+    try {
+      await updateInvoice({
+        id: invoice.id,
+        data,
+      }).unwrap();
+
+      notifySuccess('صورتحساب با موفقیت ویرایش شد.');
+      setIsEditDialogOpen(false);
+    } catch (updateError) {
+      notifyError(getApiError(updateError).message);
+    }
+  };
 
   if (isLoading || isFetching) {
     return (
@@ -87,7 +154,9 @@ const InvoiceDetailPage = () => {
         sx={{ py: 8 }}
       >
         <CircularProgress />
-        <Typography>در حال دریافت اطلاعات صورتحساب...</Typography>
+        <Typography>
+          در حال دریافت اطلاعات صورتحساب...
+        </Typography>
       </Stack>
     );
   }
@@ -95,12 +164,16 @@ const InvoiceDetailPage = () => {
   if (isError || !invoice) {
     return (
       <Stack dir="rtl" spacing={2}>
-        <Typography variant="h4">جزئیات صورتحساب</Typography>
+        <Typography variant="h4">
+          جزئیات صورتحساب
+        </Typography>
+
         <Alert severity="error">
           {isError
             ? getApiError(error).message
             : 'صورتحساب موردنظر پیدا نشد.'}
         </Alert>
+
         <Button
           variant="outlined"
           startIcon={<ArrowForwardOutlinedIcon />}
@@ -122,7 +195,9 @@ const InvoiceDetailPage = () => {
         flexWrap="wrap"
         gap={2}
       >
-        <Typography variant="h4">جزئیات صورتحساب</Typography>
+        <Typography variant="h4">
+          جزئیات صورتحساب
+        </Typography>
 
         <Stack direction="row" flexWrap="wrap" gap={1}>
           <Button
@@ -133,19 +208,52 @@ const InvoiceDetailPage = () => {
             بازگشت به فهرست
           </Button>
 
+          {canEditInvoice && (
+            <Button
+              variant="outlined"
+              startIcon={<EditOutlinedIcon />}
+              onClick={() => setIsEditDialogOpen(true)}
+            >
+              ویرایش صورتحساب
+            </Button>
+          )}
+
           <Button
             variant="contained"
             startIcon={<PrintOutlinedIcon />}
-            onClick={() => navigate(`/invoices/${invoice.id}/print`)}
+            onClick={() =>
+              navigate(`/invoices/${invoice.id}/print`)
+            }
           >
             چاپ صورتحساب
           </Button>
         </Stack>
       </Stack>
 
+      {isOrderError && (
+        <Alert severity="warning">
+          وضعیت سفارش دریافت نشد؛ امکان ویرایش صورتحساب تا زمان
+          دریافت وضعیت سفارش غیرفعال است.
+        </Alert>
+      )}
+
+      {!isOrderLoading &&
+        !isOrderFetching &&
+        !isOrderError &&
+        order &&
+        order.status !== 'invoice_registered' && (
+          <Alert severity="info">
+            ویرایش صورتحساب پس از آماده‌شدن سفارش برای ارسال
+            امکان‌پذیر نیست.
+          </Alert>
+        )}
+
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
-          <Typography variant="h6">اطلاعات صورتحساب</Typography>
+          <Typography variant="h6">
+            اطلاعات صورتحساب
+          </Typography>
+
           <Divider />
 
           <Stack
@@ -155,20 +263,26 @@ const InvoiceDetailPage = () => {
           >
             <DetailItem
               label="شماره صورتحساب"
-              value={convertToPersianDigits(invoice.invoice_number)}
+              value={convertToPersianDigits(
+                invoice.invoice_number,
+              )}
             />
+
             <DetailItem
               label="شناسه سفارش"
               value={convertToPersianDigits(invoice.order)}
             />
+
             <DetailItem
               label="تاریخ صدور"
               value={formatDate(invoice.issued_at)}
             />
+
             <DetailItem
               label="شناسه اپراتور"
               value={convertToPersianDigits(invoice.operator)}
             />
+
             <DetailItem
               label="مبلغ کل (ریال)"
               value={formatMoney(invoice.total_cost)}
@@ -179,7 +293,10 @@ const InvoiceDetailPage = () => {
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
-          <Typography variant="h6">مشخصات فرستنده</Typography>
+          <Typography variant="h6">
+            مشخصات فرستنده
+          </Typography>
+
           <Divider />
 
           <Stack
@@ -187,16 +304,30 @@ const InvoiceDetailPage = () => {
             flexWrap="wrap"
             gap={3}
           >
-            <DetailItem label="نام" value={invoice.customer_name} />
-            <DetailItem label="موبایل" value={invoice.customer_mobile} />
-            <DetailItem label="آدرس" value={invoice.customer_address} />
+            <DetailItem
+              label="نام"
+              value={invoice.customer_name}
+            />
+
+            <DetailItem
+              label="موبایل"
+              value={invoice.customer_mobile}
+            />
+
+            <DetailItem
+              label="آدرس"
+              value={invoice.customer_address}
+            />
           </Stack>
         </Stack>
       </Paper>
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
-          <Typography variant="h6">مشخصات گیرنده</Typography>
+          <Typography variant="h6">
+            مشخصات گیرنده
+          </Typography>
+
           <Divider />
 
           <Stack
@@ -204,16 +335,29 @@ const InvoiceDetailPage = () => {
             flexWrap="wrap"
             gap={3}
           >
-            <DetailItem label="نام" value={invoice.receiver_name} />
-            <DetailItem label="موبایل" value={invoice.receiver_mobile} />
-            <DetailItem label="آدرس" value={invoice.receiver_address} />
+            <DetailItem
+              label="نام"
+              value={invoice.receiver_name}
+            />
+
+            <DetailItem
+              label="موبایل"
+              value={invoice.receiver_mobile}
+            />
+
+            <DetailItem
+              label="آدرس"
+              value={invoice.receiver_address}
+            />
           </Stack>
         </Stack>
       </Paper>
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
-          <Typography variant="h6">بسته‌های صورتحساب</Typography>
+          <Typography variant="h6">
+            بسته‌های صورتحساب
+          </Typography>
 
           <DataTable<Invoice['parcels'][number]>
             rows={invoice.parcels}
@@ -249,7 +393,9 @@ const InvoiceDetailPage = () => {
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={2}>
-          <Typography variant="h6">ریز هزینه‌ها</Typography>
+          <Typography variant="h6">
+            ریز هزینه‌ها
+          </Typography>
 
           <DataTable<Invoice['charges'][number]>
             rows={invoice.charges}
@@ -279,7 +425,8 @@ const InvoiceDetailPage = () => {
               {
                 key: 'amount',
                 header: 'مبلغ (ریال)',
-                render: (charge) => formatMoney(charge.amount),
+                render: (charge) =>
+                  formatMoney(charge.amount),
               },
             ]}
             getRowId={(charge) => charge.id}
@@ -294,7 +441,10 @@ const InvoiceDetailPage = () => {
             alignItems="center"
             gap={2}
           >
-            <Typography fontWeight={700}>مبلغ کل (ریال)</Typography>
+            <Typography fontWeight={700}>
+              مبلغ کل (ریال)
+            </Typography>
+
             <Typography fontWeight={800} variant="h6">
               {formatMoney(invoice.total_cost)}
             </Typography>
@@ -302,17 +452,31 @@ const InvoiceDetailPage = () => {
         </Stack>
       </Paper>
 
-      {invoice.notes && (
-        <Paper sx={{ p: 3 }}>
-          <Stack spacing={1}>
-            <Typography variant="h6">توضیحات</Typography>
-            <Divider />
-            <Typography sx={{ whiteSpace: 'pre-wrap' }}>
-              {invoice.notes}
-            </Typography>
-          </Stack>
-        </Paper>
-      )}
+      <Paper sx={{ p: 3 }}>
+        <Stack spacing={1}>
+          <Typography variant="h6">
+            توضیحات
+          </Typography>
+
+          <Divider />
+
+          <Typography sx={{ whiteSpace: 'pre-wrap' }}>
+            {invoice.notes || 'توضیحاتی ثبت نشده است.'}
+          </Typography>
+        </Stack>
+      </Paper>
+
+      <InvoiceEditDialog
+        open={isEditDialogOpen && canEditInvoice}
+        invoice={invoice}
+        isSubmitting={isUpdatingInvoice}
+        onClose={() => {
+          if (!isUpdatingInvoice) {
+            setIsEditDialogOpen(false);
+          }
+        }}
+        onSubmit={handleUpdateInvoice}
+      />
     </Stack>
   );
 };

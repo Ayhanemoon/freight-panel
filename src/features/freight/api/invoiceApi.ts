@@ -9,6 +9,7 @@ import { PaginatedResponse } from 'shared/types/api';
 import {
   Invoice,
   CreateInvoiceRequest,
+  UpdateInvoiceRequest,
 } from 'features/freight/types/invoice';
 
 export const invoiceApi = baseApi.injectEndpoints({
@@ -39,6 +40,21 @@ export const invoiceApi = baseApi.injectEndpoints({
         { type: 'Invoice', id: 'LIST' },
       ],
     }),
+
+    updateInvoice: builder.mutation<
+      Invoice,
+      { id: number | string; data: UpdateInvoiceRequest }
+    >({
+      query: ({ id, data }) => ({
+        url: `freight/api/v1/invoices/${id}/`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Invoice', id },
+        { type: 'Invoice', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -46,4 +62,5 @@ export const {
   useGetInvoicesQuery,
   useGetInvoiceByIdQuery,
   useCreateInvoiceMutation,
+  useUpdateInvoiceMutation,
 } = invoiceApi;

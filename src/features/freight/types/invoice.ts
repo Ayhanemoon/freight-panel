@@ -66,3 +66,8 @@ export interface CreateInvoiceRequest {
   parcels: InvoiceParcelInput[];
   notes?: string;
 }
+
+export interface UpdateInvoiceRequest {
+  invoice_number?: string;
+  notes?: string;
+}
