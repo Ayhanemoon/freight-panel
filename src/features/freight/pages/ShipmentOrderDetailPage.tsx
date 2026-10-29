@@ -3,7 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import {
+  Alert,
   Button,
   Divider,
   Paper,
@@ -23,6 +26,7 @@ import {
   notifySuccess,
   notifyError,
 } from 'shared/feedback/notification';
+import { convertToPersianDigits } from 'shared/utils/number';
 import { crudMessages } from 'shared/feedback/crudMessages';
 import {
   useGetShipmentOrderByIdQuery,
@@ -42,11 +46,12 @@ import {
   ParcelWriteRequest,
 } from 'features/freight/api/parcelApi';
 import ParcelFormDialog from 'features/freight/components/ParcelFormDialog';
-import { useCreateInvoiceMutation } from 'features/freight/api/invoiceApi';
+import { useCreateInvoiceMutation, useGetInvoiceForOrderQuery } from 'features/freight/api/invoiceApi';
 import InvoiceRegistrationDialog from 'features/freight/components/InvoiceRegistrationDialog';
 import { CreateInvoiceRequest } from 'features/freight/types/invoice';
 import { ShipmentOrder } from 'features/freight/types/shipmentOrder';
 import { Parcel } from 'features/freight/types/parcel';
+import type { Invoice } from 'features/freight/types/invoice';
 
 const statusLabels: Record<ShipmentOrder['status'], string> = {
   draft: 'پیش‌نویس',
@@ -81,6 +86,16 @@ const formatDate = (value: string | null): string => {
   return Number.isNaN(date.getTime())
     ? '—'
     : date.toLocaleString('fa-IR');
+};
+
+const formatMoney = (value: string | number | null | undefined) => {
+  const amount = Number(value ?? 0);
+
+  if (!Number.isFinite(amount)) return '—';
+
+  return convertToPersianDigits(
+    new Intl.NumberFormat('fa-IR').format(amount),
+  );
 };
 
 const getStatusLabel = (status: string | null): string => {
@@ -159,6 +174,28 @@ const ShipmentOrderDetailPage: React.FC = () => {
     receiveShipmentOrderAtBranch,
     { isLoading: isReceivingAtBranch },
   ] = useReceiveShipmentOrderAtBranchMutation();
+
+  const {
+    data: orderInvoice,
+    isLoading: isInvoiceLoading,
+    isFetching: isInvoiceFetching,
+    isError: isInvoiceError,
+    error: invoiceError,
+  } = useGetInvoiceForOrderQuery(id ?? '', {
+    skip: !id,
+  });
+
+  const invoiceLookupComplete = !isInvoiceLoading && !isInvoiceFetching;
+
+  const invoiceNotFound =
+    invoiceLookupComplete &&
+    isInvoiceError &&
+    getApiError(invoiceError).status === 404;
+
+  const invoiceLookupFailed =
+    invoiceLookupComplete &&
+    isInvoiceError &&
+    !invoiceNotFound;
 
   const [workflowAction, setWorkflowAction] =
     useState<ShipmentOrderWorkflowAction>(null);
@@ -555,17 +592,6 @@ const ShipmentOrderDetailPage: React.FC = () => {
               </Button>
             )}
 
-            
-            {order.status === 'received_at_branch' && (
-              <Button
-                variant="contained"
-                color="success"
-                onClick={() => setIsInvoiceDialogOpen(true)}
-              >
-                ثبت صورتحساب و بیجک
-              </Button>
-            )}
-
 
             {order.status === 'collected' && (
               <Button
@@ -715,6 +741,98 @@ const ShipmentOrderDetailPage: React.FC = () => {
               label="شرح محموله"
               value={order.shipment_description}
             />
+          </Stack>
+        </Paper>
+
+        <Paper sx={{ p: 3 }}>
+          <Stack spacing={2}>
+            <Typography variant="h6">صورتحساب و بیجک باربری</Typography>
+            <Divider />
+
+            {isInvoiceLoading || isInvoiceFetching ? (
+              <Typography color="text.secondary">
+                در حال بررسی صورتحساب سفارش...
+              </Typography>
+            ) : null}
+
+            {invoiceLookupFailed && (
+              <Alert severity="error">
+                {getApiError(invoiceError).message}
+              </Alert>
+            )}
+
+            {orderInvoice && (
+              <>
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  flexWrap="wrap"
+                  gap={3}
+                >
+                  <DetailItem
+                    label="شماره صورتحساب"
+                    value={convertToPersianDigits(orderInvoice.invoice_number)}
+                  />
+
+                  <DetailItem
+                    label="مبلغ کل (ریال)"
+                    value={formatMoney(orderInvoice.total_cost)}
+                  />
+
+                  <DetailItem
+                    label="تاریخ صدور"
+                    value={formatDate(orderInvoice.issued_at)}
+                  />
+                </Stack>
+
+                <Stack direction="row" flexWrap="wrap" gap={1}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<VisibilityOutlinedIcon />}
+                    onClick={() =>
+                      navigate(`/dashboard/invoices/${orderInvoice.id}`)
+                    }
+                  >
+                    مشاهده و ویرایش صورتحساب
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    startIcon={<PrintOutlinedIcon />}
+                    onClick={() =>
+                      navigate(`/invoices/${orderInvoice.id}/print`)
+                    }
+                  >
+                    چاپ صورتحساب
+                  </Button>
+                </Stack>
+              </>
+            )}
+
+            {!orderInvoice &&
+              invoiceNotFound &&
+              order.status === 'received_at_branch' && (
+                <>
+                  <Typography color="text.secondary">
+                    هنوز صورتحسابی برای این سفارش ثبت نشده است.
+                  </Typography>
+
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() => setIsInvoiceDialogOpen(true)}
+                  >
+                    ثبت صورتحساب و بیجک
+                  </Button>
+                </>
+              )}
+
+            {!orderInvoice &&
+              invoiceNotFound &&
+              order.status !== 'received_at_branch' && (
+                <Typography color="text.secondary">
+                  برای این سفارش هنوز صورتحسابی ثبت نشده است.
+                </Typography>
+              )}
           </Stack>
         </Paper>
 

@@ -9,21 +9,35 @@ import {
   Paper,
   Stack,
   Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from '@mui/material';
 import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined';
 import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import {
   useGetInvoiceByIdQuery,
   useUpdateInvoiceMutation,
+  useCreateInvoiceChargeMutation,
+  useUpdateInvoiceChargeMutation,
+  useDeleteInvoiceChargeMutation,
 } from 'features/freight/api/invoiceApi';
 import { useGetShipmentOrderByIdQuery } from 'features/freight/api/shipmentOrderApi';
 import type {
   Invoice,
+  InvoiceCharge,
+  InvoiceChargeInput,
   UpdateInvoiceRequest,
 } from 'features/freight/types/invoice';
 import InvoiceEditDialog from 'features/freight/components/InvoiceEditDialog';
+import InvoiceChargeDialog from 'features/freight/components/InvoiceChargeDialog';
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
@@ -113,6 +127,21 @@ const InvoiceDetailPage = () => {
     { isLoading: isUpdatingInvoice },
   ] = useUpdateInvoiceMutation();
 
+  const [isChargeDialogOpen, setIsChargeDialogOpen] = useState(false);
+  const [chargeToEdit, setChargeToEdit] = useState<InvoiceCharge | null>(null);
+  const [chargeToDelete, setChargeToDelete] = useState<InvoiceCharge | null>(null);
+
+  const [createInvoiceCharge, { isLoading: isCreatingCharge }] =
+    useCreateInvoiceChargeMutation();
+
+  const [updateInvoiceCharge, { isLoading: isUpdatingCharge }] =
+    useUpdateInvoiceChargeMutation();
+
+  const [deleteInvoiceCharge, { isLoading: isDeletingCharge }] =
+    useDeleteInvoiceChargeMutation();
+
+  const isSavingCharge = isCreatingCharge || isUpdatingCharge;
+
   // Invoice editing is available only before dispatch preparation.
   // The backend must enforce this restriction independently.
   const canEditInvoice =
@@ -141,6 +170,76 @@ const InvoiceDetailPage = () => {
       setIsEditDialogOpen(false);
     } catch (updateError) {
       notifyError(getApiError(updateError).message);
+    }
+  };
+
+  const handleOpenAddCharge = () => {
+    setChargeToEdit(null);
+    setIsChargeDialogOpen(true);
+  };
+
+  const handleOpenEditCharge = (charge: InvoiceCharge) => {
+    setChargeToEdit(charge);
+    setIsChargeDialogOpen(true);
+  };
+
+  const handleCloseChargeDialog = () => {
+    if (isSavingCharge) return;
+
+    setIsChargeDialogOpen(false);
+    setChargeToEdit(null);
+  };
+
+  const handleSaveCharge = async (data: InvoiceChargeInput) => {
+    if (!invoice || !canEditInvoice) {
+      notifyError('ویرایش هزینه در وضعیت فعلی سفارش امکان‌پذیر نیست.');
+      return;
+    }
+
+    try {
+      if (chargeToEdit) {
+        await updateInvoiceCharge({
+          invoiceId: invoice.id,
+          orderId: invoice.order,
+          chargeId: chargeToEdit.id,
+          data,
+        }).unwrap();
+
+        notifySuccess('هزینه با موفقیت ویرایش شد.');
+      } else {
+        await createInvoiceCharge({
+          invoiceId: invoice.id,
+          orderId: invoice.order,
+          data,
+        }).unwrap();
+
+        notifySuccess('هزینه با موفقیت اضافه شد.');
+      }
+
+      setIsChargeDialogOpen(false);
+      setChargeToEdit(null);
+    } catch (chargeError) {
+      notifyError(getApiError(chargeError).message);
+    }
+  };
+
+  const handleDeleteCharge = async () => {
+    if (!invoice || !chargeToDelete || !canEditInvoice) {
+      notifyError('حذف هزینه در وضعیت فعلی سفارش امکان‌پذیر نیست.');
+      return;
+    }
+
+    try {
+      await deleteInvoiceCharge({
+        invoiceId: invoice.id,
+        orderId: invoice.order,
+        chargeId: chargeToDelete.id,
+      }).unwrap();
+
+      notifySuccess('هزینه با موفقیت حذف شد.');
+      setChargeToDelete(null);
+    } catch (chargeError) {
+      notifyError(getApiError(chargeError).message);
     }
   };
 
@@ -392,64 +491,79 @@ const InvoiceDetailPage = () => {
       </Paper>
 
       <Paper sx={{ p: 3 }}>
-        <Stack spacing={2}>
-          <Typography variant="h6">
-            ریز هزینه‌ها
-          </Typography>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={2}
+        >
+          <Typography variant="h6">ریز هزینه‌ها</Typography>
 
-          <DataTable<Invoice['charges'][number]>
-            rows={invoice.charges}
-            columns={[
-              {
-                key: 'charge_type',
-                header: 'عنوان هزینه',
-                render: (charge) =>
-                  chargeLabels[charge.charge_type] ??
-                  charge.charge_type,
-              },
-              {
-                key: 'description',
-                header: 'شرح',
-                render: (charge) => charge.description || '—',
-              },
-              {
-                key: 'payer',
-                header: 'پرداخت‌کننده',
-                render: (charge) =>
-                  charge.payer === 'sender'
-                    ? 'فرستنده'
-                    : charge.payer === 'receiver'
-                      ? 'گیرنده'
-                      : '—',
-              },
-              {
-                key: 'amount',
-                header: 'مبلغ (ریال)',
-                render: (charge) =>
-                  formatMoney(charge.amount),
-              },
-            ]}
-            getRowId={(charge) => charge.id}
-            emptyMessage="هزینه‌ای برای این صورتحساب ثبت نشده است."
-          />
-
-          <Divider />
-
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            gap={2}
-          >
-            <Typography fontWeight={700}>
-              مبلغ کل (ریال)
-            </Typography>
-
-            <Typography fontWeight={800} variant="h6">
-              {formatMoney(invoice.total_cost)}
-            </Typography>
-          </Stack>
+          {canEditInvoice && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddCharge}
+            >
+              افزودن هزینه
+            </Button>
+          )}
         </Stack>
+
+        <DataTable<Invoice['charges'][number]>
+          rows={invoice.charges}
+          columns={[
+            {
+              key: 'charge_type',
+              header: 'عنوان هزینه',
+              render: (charge) =>
+                chargeLabels[charge.charge_type] ?? charge.charge_type,
+            },
+            {
+              key: 'description',
+              header: 'شرح',
+              render: (charge) => charge.description || '—',
+            },
+            {
+              key: 'payer',
+              header: 'پرداخت‌کننده',
+              render: (charge) =>
+                charge.payer === 'sender'
+                  ? 'فرستنده'
+                  : charge.payer === 'receiver'
+                    ? 'گیرنده'
+                    : '—',
+            },
+            {
+              key: 'amount',
+              header: 'مبلغ (ریال)',
+              render: (charge) => formatMoney(charge.amount),
+            },
+          ]}
+          getRowId={(charge) => charge.id}
+          emptyMessage="هزینه‌ای برای این صورتحساب ثبت نشده است."
+          actions={
+            canEditInvoice
+              ? [
+                  {
+                    key: 'edit',
+                    label: 'ویرایش هزینه',
+                    icon: <EditIcon fontSize="small" />,
+                    disabled: () => isSavingCharge || isDeletingCharge,
+                    onClick: handleOpenEditCharge,
+                  },
+                  {
+                    key: 'delete',
+                    label: 'حذف هزینه',
+                    icon: <DeleteIcon fontSize="small" />,
+                    disabled: () => isSavingCharge || isDeletingCharge,
+                    onClick: (charge) => setChargeToDelete(charge),
+                  },
+                ]
+              : []
+          }
+        />
       </Paper>
 
       <Paper sx={{ p: 3 }}>
@@ -477,6 +591,51 @@ const InvoiceDetailPage = () => {
         }}
         onSubmit={handleUpdateInvoice}
       />
+
+      <InvoiceChargeDialog
+        open={isChargeDialogOpen && canEditInvoice}
+        charge={chargeToEdit}
+        isSubmitting={isSavingCharge}
+        onClose={handleCloseChargeDialog}
+        onSubmit={handleSaveCharge}
+      />
+
+      <Dialog
+        open={Boolean(chargeToDelete) && canEditInvoice}
+        onClose={() => {
+          if (!isDeletingCharge) setChargeToDelete(null);
+        }}
+        dir="rtl"
+      >
+        <DialogTitle>حذف ردیف هزینه</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            آیا از حذف این ردیف هزینه با مبلغ{' '}
+            <strong>{formatMoney(chargeToDelete?.amount)}</strong> ریال
+            مطمئن هستید؟
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => setChargeToDelete(null)}
+            disabled={isDeletingCharge}
+            color="inherit"
+          >
+            انصراف
+          </Button>
+
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDeleteCharge}
+            disabled={isDeletingCharge}
+          >
+            {isDeletingCharge ? 'در حال حذف...' : 'حذف هزینه'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 };
