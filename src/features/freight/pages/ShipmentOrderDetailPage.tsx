@@ -37,6 +37,7 @@ import {
   useRejectShipmentOrderMutation,
   useCancelShipmentOrderMutation,
   useReceiveShipmentOrderAtBranchMutation,
+  useMarkShipmentOrderReadyForDispatchMutation,
 } from 'features/freight/api/shipmentOrderApi';
 import {
   useGetParcelsQuery,
@@ -74,6 +75,7 @@ type ShipmentOrderWorkflowAction =
   | 'start-review'
   | 'approve-collection'
   | 'receive-at-branch'
+  | 'ready-for-dispatch'
   | 'reject'
   | 'cancel'
   | null;
@@ -175,6 +177,11 @@ const ShipmentOrderDetailPage: React.FC = () => {
     { isLoading: isReceivingAtBranch },
   ] = useReceiveShipmentOrderAtBranchMutation();
 
+  const [
+  markShipmentOrderReadyForDispatch,
+  { isLoading: isMarkingReadyForDispatch },
+] = useMarkShipmentOrderReadyForDispatchMutation();
+
   const {
     data: orderInvoice,
     isLoading: isInvoiceLoading,
@@ -207,7 +214,8 @@ const ShipmentOrderDetailPage: React.FC = () => {
     isApprovingCollection ||
     isReceivingAtBranch ||
     isRejecting ||
-    isCancelling;
+    isCancelling ||
+    isMarkingReadyForDispatch;
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -306,6 +314,12 @@ const ShipmentOrderDetailPage: React.FC = () => {
           }).unwrap();
 
           notifySuccess('دریافت سفارش در شعبه ثبت شد.');
+          break;
+        
+        case 'ready-for-dispatch':
+          await markShipmentOrderReadyForDispatch(id).unwrap();
+
+          notifySuccess('سفارش با موفقیت برای ارسال آماده شد.');
           break;
       }
 
@@ -592,6 +606,16 @@ const ShipmentOrderDetailPage: React.FC = () => {
               </Button>
             )}
 
+            {order.status === 'invoice_registered' && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => handleOpenWorkflowAction('ready-for-dispatch')}
+                disabled={isWorkflowActionLoading}
+              >
+                آماده‌سازی برای ارسال
+              </Button>
+            )}
 
             {order.status === 'collected' && (
               <Button
@@ -1020,6 +1044,9 @@ const ShipmentOrderDetailPage: React.FC = () => {
             {workflowAction === 'receive-at-branch' &&
               'ثبت دریافت سفارش در شعبه'}
 
+            {workflowAction === 'ready-for-dispatch' &&
+              'آماده‌سازی سفارش برای ارسال'}
+
             {workflowAction === 'reject' &&
               'رد سفارش'}
 
@@ -1037,6 +1064,9 @@ const ShipmentOrderDetailPage: React.FC = () => {
 
               {workflowAction === 'receive-at-branch' &&
                 'پس از دریافت فیزیکی محموله در شعبه، این عملیات را ثبت کنید. در صورت نیاز توضیحی وارد کنید.'}
+
+              {workflowAction === 'ready-for-dispatch' &&
+                'پس از اطمینان از ثبت صورتحساب و آماده بودن محموله، وضعیت سفارش را به آماده ارسال تغییر دهید.'}
 
               {workflowAction === 'reject' &&
                 'دلیل رد سفارش را وارد کنید. ثبت دلیل الزامی است.'}

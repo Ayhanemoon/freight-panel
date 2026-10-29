@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Button,
   Dialog,
@@ -13,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
@@ -48,6 +50,7 @@ const formatDate = (value: string | null): string => {
 };
 
 const DispatchBatchesPage = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
@@ -207,6 +210,15 @@ const DispatchBatchesPage = () => {
                 setPage(0);
               },
             }}
+            actions={[
+              {
+                key: 'view',
+                label: 'مشاهده جزئیات',
+                icon: <VisibilityOutlinedIcon />,
+                onClick: (batch) =>
+                  navigate(`/dashboard/dispatch-batches/${batch.id}`),
+              },
+            ]}
           />
         </Stack>
       </Paper>
