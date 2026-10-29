@@ -24,6 +24,7 @@ import ShipmentOrderDetailPage from 'features/freight/pages/ShipmentOrderDetailP
 import InvoicesPage from 'features/freight/pages/InvoicesPage';
 import InvoiceDetailPage from 'features/freight/pages/InvoiceDetailPage';
 import InvoicePrintPage from 'features/freight/pages/InvoicePrintPage';
+import DispatchBatchesPage from 'features/freight/pages/DispatchBatchesPage';
 import FreightCompaniesPage from 'features/freight/pages/FreightCompaniesPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -143,6 +144,10 @@ const isAuthenticated =
                                 <Route
                                     path="invoices"
                                     element={<InvoicesPage />}
+                                />
+                                <Route
+                                    path="dispatch-batches"
+                                    element={<DispatchBatchesPage />}
                                 />
                             </Route>
                             <Route

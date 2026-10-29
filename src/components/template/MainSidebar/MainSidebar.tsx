@@ -17,6 +17,7 @@ const MainSidebar = ({ open, mobileMode, onClose }: SidebarProps) => {
     { to: '/dashboard/shipment-orders', label: 'سفارش‌های ارسال' },
     { to: '/dashboard/collection-tasks', label: 'جمع‌آوری بسته ها' },
     { to: '/dashboard/invoices', label: 'صورتحساب‌ها' },
+    { to: '/dashboard/dispatch-batches', label: 'بسته‌های ارسال' },
   ]
   const location = useLocation();
   const isActive = (path: string) => {
