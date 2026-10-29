@@ -140,6 +140,18 @@ export const shipmentOrderApi = baseApi.injectEndpoints({
         body: note?.trim() ? { note: note.trim() } : {},
       }),
     }),
+    markShipmentOrderReadyForDispatch: builder.mutation<
+      ShipmentOrderDetail,
+      number | string
+    >({
+      query: (id) => ({
+        url: `freight/api/v1/shipment-orders/${id}/ready-for-dispatch/`,
+        method: 'POST',
+      }),
+      invalidatesTags: [
+        { type: 'DispatchBatch', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -155,4 +167,5 @@ export const {
   useRejectShipmentOrderMutation,
   useCancelShipmentOrderMutation,
   useReceiveShipmentOrderAtBranchMutation,
+  useMarkShipmentOrderReadyForDispatchMutation
 } = shipmentOrderApi;
