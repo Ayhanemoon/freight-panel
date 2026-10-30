@@ -31,6 +31,7 @@ import {
   useGetDispatchBatchByIdQuery,
   useRemoveOrderFromDispatchBatchMutation,
   useAssignFreightCompanyMutation,
+  useMakeDispatchBatchReadyMutation,
 } from 'features/freight/api/dispatchApi';
 import { useGetShipmentOrdersQuery } from 'features/freight/api/shipmentOrderApi';
 import { useGetFreightCompaniesQuery } from 'features/freight/api/freightCompanyApi';
@@ -101,17 +102,33 @@ const DispatchBatchDetailPage = () => {
       !existingOrderIds.has(order.id)
   );
 
+  const hasOrders = batch?.orders.length
+    ? batch.orders.length > 0
+    : false;
+
+  const allOrdersHaveFreightAssignment =
+    hasOrders &&
+    batch!.orders.every((item) =>
+      item.freight_assignments?.some(
+        (assignment) => assignment.status === 'dispatching'
+      )
+    );
+
+  const canMakeBatchReady =
+    batch?.status === 'draft' &&
+    allOrdersHaveFreightAssignment;
+
   const [assignmentOrder, setAssignmentOrder] =
     useState<DispatchOrder | null>(null);
 
   const [freightCompanyId, setFreightCompanyId] = useState('');
   const [payer, setPayer] = useState<'sender' | 'receiver'>('sender');
 
-  const { data: freightCompaniesData, isLoading: freightCompaniesLoading } =
-    useGetFreightCompaniesQuery({ page_size: 100 });
+  const { data: freightCompaniesData, isLoading: freightCompaniesLoading } = useGetFreightCompaniesQuery({ page_size: 100 });
 
-  const [assignFreightCompany, { isLoading: isAssigningFreight }] =
-    useAssignFreightCompanyMutation();
+  const [assignFreightCompany, { isLoading: isAssigningFreight }] = useAssignFreightCompanyMutation();
+
+  const [makeBatchReady, { isLoading: isMakingReady }] = useMakeDispatchBatchReadyMutation();
 
   const handleAddOrder = async () => {
     if (!id || !selectedOrderId) {
@@ -155,6 +172,7 @@ const DispatchBatchDetailPage = () => {
 
     try {
       await assignFreightCompany({
+        batchId: id!,
         dispatchOrderId: assignmentOrder.id,
         freight_company: Number(freightCompanyId),
         payer,
@@ -164,6 +182,23 @@ const DispatchBatchDetailPage = () => {
       setAssignmentOrder(null);
       setFreightCompanyId('');
       setPayer('sender');
+    } catch (error) {
+      notifyError(getApiError(error).message);
+    }
+  };
+
+  const handleMakeBatchReady = async () => {
+    if (!batch || !canMakeBatchReady) {
+      notifyError(
+        'برای آماده‌سازی، دسته باید حداقل یک سفارش داشته باشد و برای تمام سفارش‌ها شرکت حمل‌ونقل تخصیص داده شده باشد.'
+      );
+      return;
+    }
+
+    try {
+      await makeBatchReady(batch.id).unwrap();
+
+      notifySuccess('دسته ارسال با موفقیت آماده شد.');
     } catch (error) {
       notifyError(getApiError(error).message);
     }
@@ -234,6 +269,33 @@ const DispatchBatchDetailPage = () => {
           بازگشت به فهرست
         </Button>
       </Stack>
+
+      {batch.status === 'draft' && (
+        <Stack spacing={1} sx={{ mt: 3 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleMakeBatchReady}
+            disabled={!canMakeBatchReady || isMakingReady}
+          >
+            {isMakingReady
+              ? 'در حال آماده‌سازی...'
+              : 'آماده‌سازی دسته ارسال'}
+          </Button>
+
+          {!hasOrders && (
+            <Typography variant="caption" color="text.secondary">
+              ابتدا حداقل یک سفارش به دسته اضافه کنید.
+            </Typography>
+          )}
+
+          {hasOrders && !allOrdersHaveFreightAssignment && (
+            <Typography variant="caption" color="text.secondary">
+              برای تمام سفارش‌های این دسته باید شرکت حمل‌ونقل تخصیص داده شود.
+            </Typography>
+          )}
+        </Stack>
+      )}
 
       <Paper sx={{ p: 3 }}>
         <Stack spacing={1}>

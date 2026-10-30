@@ -105,17 +105,21 @@ export const dispatchApi = baseApi.injectEndpoints({
 
     assignFreightCompany: builder.mutation<
       DispatchFreightAssignment,
-      { dispatchOrderId: number | string } & AssignFreightRequest
+      {
+        batchId: number | string;
+        dispatchOrderId: number | string;
+      } & AssignFreightRequest
     >({
       query: ({ dispatchOrderId, freight_company, payer }) => ({
         url: `freight/api/v1/dispatch-orders/${dispatchOrderId}/assign-freight/`,
         method: 'POST',
         body: { freight_company, payer },
       }),
-      invalidatesTags: (_result, _error, { dispatchOrderId }) => [
+      invalidatesTags: (_result, _error, { batchId, dispatchOrderId }) => [
         { type: 'DispatchOrder', id: dispatchOrderId },
         { type: 'DispatchOrder', id: 'LIST' },
         { type: 'DispatchAssignment', id: 'LIST' },
+        { type: 'DispatchBatch', id: batchId },
         { type: 'DispatchBatch', id: 'LIST' },
       ],
     }),
