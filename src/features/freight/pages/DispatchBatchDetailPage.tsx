@@ -13,6 +13,9 @@ import {
   DialogContent,
   DialogTitle,
 } from '@mui/material';
+import Autocomplete, {
+  createFilterOptions,
+} from '@mui/material/Autocomplete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
@@ -47,6 +50,16 @@ const statusLabels: Record<string, string> = {
   rejected: 'ردشده',
   returned: 'برگشت‌خورده',
 };
+
+const shipmentOrderFilter = createFilterOptions<ShipmentOrder>({
+  stringify: (order) =>
+    [
+      order.tracking_code,
+      order.id,
+      order.sender_name,
+      order.receiver_name,
+    ].join(' '),
+});
 
 const DispatchBatchDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -249,27 +262,64 @@ const DispatchBatchDetailPage = () => {
           <Stack spacing={2}>
             <Typography variant="h6">افزودن سفارش آماده ارسال</Typography>
 
-            <TextField
-              select
+            <Autocomplete<ShipmentOrder>
               fullWidth
-              label="سفارش"
-              value={selectedOrderId}
-              onChange={(event) => setSelectedOrderId(event.target.value)}
-              disabled={shipmentOrdersLoading || isAdding}
-              helperText={
-                eligibleOrders.length
-                  ? 'فقط سفارش‌های آماده ارسال نمایش داده می‌شوند.'
-                  : 'سفارش آماده ارسالِ قابل افزودنی وجود ندارد.'
+              options={eligibleOrders}
+              value={
+                eligibleOrders.find(
+                  (order) => String(order.id) === selectedOrderId
+                ) ?? null
               }
-            >
-              {eligibleOrders.map((order: ShipmentOrder) => (
-                <MenuItem key={order.id} value={String(order.id)}>
-                  {order.tracking_code || `سفارش ${order.id}`}
-                  {' — '}
-                  {order.sender_name} ← {order.receiver_name}
-                </MenuItem>
-              ))}
-            </TextField>
+              loading={shipmentOrdersLoading}
+              disabled={
+                shipmentOrdersLoading ||
+                isAdding ||
+                eligibleOrders.length === 0
+              }
+              filterOptions={shipmentOrderFilter}
+              getOptionLabel={(order) =>
+                `${order.tracking_code || `سفارش ${order.id}`} — ${order.sender_name} ← ${order.receiver_name}`
+              }
+              isOptionEqualToValue={(option, value) =>
+                option.id === value.id
+              }
+              noOptionsText={
+                eligibleOrders.length
+                  ? 'سفارشی با عبارت جست‌وجوشده پیدا نشد.'
+                  : 'هیچ سفارش آماده ارسالی برای افزودن وجود ندارد.'
+              }
+              loadingText="در حال دریافت سفارش‌ها..."
+              onChange={(_, newValue) => {
+                setSelectedOrderId(
+                  newValue ? String(newValue.id) : ''
+                );
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="جست‌وجو و انتخاب سفارش"
+                  placeholder="کد رهگیری، شناسه، فرستنده یا گیرنده..."
+                  helperText={
+                    eligibleOrders.length
+                      ? 'فقط سفارش‌های آماده ارسال که هنوز در این دسته نیستند نمایش داده می‌شوند.'
+                      : 'در حال حاضر سفارشی برای افزودن وجود ندارد.'
+                  }
+                />
+              )}
+              renderOption={(props, order) => (
+                <li {...props} key={order.id}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {order.tracking_code || `سفارش ${order.id}`}
+                    </Typography>
+
+                    <Typography variant="caption" color="text.secondary">
+                      {order.sender_name} ← {order.receiver_name}
+                    </Typography>
+                  </Stack>
+                </li>
+              )}
+            />
 
             <Stack direction="row" justifyContent="flex-start">
               <Button
