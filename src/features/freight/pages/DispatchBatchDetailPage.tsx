@@ -8,9 +8,14 @@ import {
   Stack,
   TextField,
   Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
@@ -22,8 +27,10 @@ import {
   useAddOrderToDispatchBatchMutation,
   useGetDispatchBatchByIdQuery,
   useRemoveOrderFromDispatchBatchMutation,
+  useAssignFreightCompanyMutation,
 } from 'features/freight/api/dispatchApi';
 import { useGetShipmentOrdersQuery } from 'features/freight/api/shipmentOrderApi';
+import { useGetFreightCompaniesQuery } from 'features/freight/api/freightCompanyApi';
 import { DispatchOrder } from 'features/freight/types/dispatch';
 import { ShipmentOrder } from 'features/freight/types/shipmentOrder';
 import { convertToPersianDigits } from 'shared/utils/number';
@@ -81,6 +88,18 @@ const DispatchBatchDetailPage = () => {
       !existingOrderIds.has(order.id)
   );
 
+  const [assignmentOrder, setAssignmentOrder] =
+    useState<DispatchOrder | null>(null);
+
+  const [freightCompanyId, setFreightCompanyId] = useState('');
+  const [payer, setPayer] = useState<'sender' | 'receiver'>('sender');
+
+  const { data: freightCompaniesData, isLoading: freightCompaniesLoading } =
+    useGetFreightCompaniesQuery({ page_size: 100 });
+
+  const [assignFreightCompany, { isLoading: isAssigningFreight }] =
+    useAssignFreightCompanyMutation();
+
   const handleAddOrder = async () => {
     if (!id || !selectedOrderId) {
       notifyError('لطفاً سفارش را انتخاب کنید.');
@@ -110,6 +129,28 @@ const DispatchBatchDetailPage = () => {
       }).unwrap();
 
       notifySuccess('سفارش از دسته ارسال حذف شد.');
+    } catch (error) {
+      notifyError(getApiError(error).message);
+    }
+  };
+
+  const handleAssignFreightCompany = async () => {
+    if (!assignmentOrder || !freightCompanyId) {
+      notifyError('لطفاً شرکت حمل‌ونقل را انتخاب کنید.');
+      return;
+    }
+
+    try {
+      await assignFreightCompany({
+        dispatchOrderId: assignmentOrder.id,
+        freight_company: Number(freightCompanyId),
+        payer,
+      }).unwrap();
+
+      notifySuccess('شرکت حمل‌ونقل با موفقیت تخصیص داده شد.');
+      setAssignmentOrder(null);
+      setFreightCompanyId('');
+      setPayer('sender');
     } catch (error) {
       notifyError(getApiError(error).message);
     }
@@ -258,20 +299,116 @@ const DispatchBatchDetailPage = () => {
             loading={isRemoving}
             emptyMessage="هنوز سفارشی به این دسته اضافه نشده است."
             actions={
-              batch.status === 'draft'
+              batch.status === 'draft' || batch.status === 'in_progress'
                 ? [
                     {
-                      key: 'remove',
-                      label: 'حذف از دسته',
-                      icon: <DeleteOutlineIcon />,
-                      onClick: handleRemoveOrder,
+                      key: 'assign-freight',
+                      label: 'تخصیص شرکت حمل‌ونقل',
+                      icon: <AssignmentTurnedInIcon />,
+                      onClick: (item: DispatchOrder) => {
+                        const hasActiveAssignment = item.freight_assignments?.some(
+                          (assignment) => assignment.status === 'dispatching'
+                        );
+
+                        if (hasActiveAssignment) {
+                          notifyError('این سفارش از قبل تخصیص فعال دارد.');
+                          return;
+                        }
+
+                        setAssignmentOrder(item);
+                        setFreightCompanyId('');
+                        setPayer('sender');
+                      },
+                      hidden: (item: DispatchOrder) =>
+                        !['pending', 'in_progress'].includes(item.status) ||
+                        item.freight_assignments?.some(
+                          (assignment) => assignment.status === 'dispatching'
+                        ),
                     },
+                    ...(batch.status === 'draft'
+                      ? [{
+                          key: 'remove',
+                          label: 'حذف از دسته',
+                          icon: <DeleteOutlineIcon />,
+                          onClick: handleRemoveOrder,
+                        }]
+                      : []),
                   ]
                 : []
             }
           />
         </Stack>
       </Paper>
+      <Dialog
+        open={Boolean(assignmentOrder)}
+        onClose={() => {
+          if (!isAssigningFreight) {
+            setAssignmentOrder(null);
+          }
+        }}
+        fullWidth
+        maxWidth="sm"
+        dir="rtl"
+      >
+        <DialogTitle>تخصیص شرکت حمل‌ونقل</DialogTitle>
+
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <TextField
+              select
+              fullWidth
+              required
+              label="شرکت حمل‌ونقل"
+              value={freightCompanyId}
+              onChange={(event) => setFreightCompanyId(event.target.value)}
+              disabled={freightCompaniesLoading || isAssigningFreight}
+            >
+              {(freightCompaniesData?.results ?? [])
+                .filter((company) => company.is_active)
+                .map((company) => (
+                  <MenuItem key={company.id} value={String(company.id)}>
+                    {company.name} — {company.code}
+                  </MenuItem>
+                ))}
+            </TextField>
+
+            <TextField
+              select
+              fullWidth
+              label="پرداخت‌کننده هزینه"
+              value={payer}
+              onChange={(event) =>
+                setPayer(event.target.value as 'sender' | 'receiver')
+              }
+              disabled={isAssigningFreight}
+            >
+              <MenuItem value="sender">فرستنده</MenuItem>
+              <MenuItem value="receiver">گیرنده</MenuItem>
+            </TextField>
+          </Stack>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => setAssignmentOrder(null)}
+            disabled={isAssigningFreight}
+          >
+            انصراف
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={handleAssignFreightCompany}
+            disabled={
+              !freightCompanyId ||
+              freightCompaniesLoading ||
+              isAssigningFreight
+            }
+          >
+            {isAssigningFreight ? 'در حال تخصیص...' : 'ثبت تخصیص'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 };
