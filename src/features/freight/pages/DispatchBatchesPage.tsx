@@ -13,8 +13,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 import DataTable from 'shared/components/DataTable/DataTable';
 import { getApiError } from 'shared/api/apiError';
@@ -22,11 +25,15 @@ import {
   notifyError,
   notifySuccess,
 } from 'shared/feedback/notification';
+
 import { useGetBranchesQuery } from 'features/freight/api/branchApi';
 import {
   useCreateDispatchBatchMutation,
+  useDeleteDispatchBatchMutation,
   useGetDispatchBatchesQuery,
+  useUpdateDispatchBatchMutation,
 } from 'features/freight/api/dispatchApi';
+
 import { DispatchBatch } from 'features/freight/types/dispatch';
 import { convertToPersianDigits } from 'shared/utils/number';
 
@@ -49,12 +56,41 @@ const formatDate = (value: string | null): string => {
     : date.toLocaleDateString('fa-IR');
 };
 
+const toLocalDateTimeInput = (value: string | null): string => {
+  if (!value) return '';
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return '';
+
+  const pad = (number: number) => String(number).padStart(2, '0');
+
+  return [
+    date.getFullYear(),
+    '-',
+    pad(date.getMonth() + 1),
+    '-',
+    pad(date.getDate()),
+    'T',
+    pad(date.getHours()),
+    ':',
+    pad(date.getMinutes()),
+  ].join('');
+};
+
 const DispatchBatchesPage = () => {
   const navigate = useNavigate();
+
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingBatch, setEditingBatch] =
+    useState<DispatchBatch | null>(null);
+
+  const [deleteTarget, setDeleteTarget] =
+    useState<DispatchBatch | null>(null);
+
   const [branchId, setBranchId] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [notes, setNotes] = useState('');
@@ -73,10 +109,16 @@ const DispatchBatchesPage = () => {
   const { data: branchesData, isLoading: branchesLoading } =
     useGetBranchesQuery({ page_size: 100 });
 
-  const [
-    createDispatchBatch,
-    { isLoading: isCreating },
-  ] = useCreateDispatchBatchMutation();
+  const [createDispatchBatch, { isLoading: isCreating }] =
+    useCreateDispatchBatchMutation();
+
+  const [updateDispatchBatch, { isLoading: isUpdating }] =
+    useUpdateDispatchBatchMutation();
+
+  const [deleteDispatchBatch, { isLoading: isDeleting }] =
+    useDeleteDispatchBatchMutation();
+
+  const isSaving = isCreating || isUpdating;
 
   useEffect(() => {
     if (!isError || !error) return;
@@ -95,33 +137,73 @@ const DispatchBatchesPage = () => {
     setBranchId('');
     setScheduledAt('');
     setNotes('');
+    setEditingBatch(null);
   };
 
   const handleClose = () => {
-    if (isCreating) return;
+    if (isSaving) return;
 
     setDialogOpen(false);
     resetForm();
   };
 
-  const handleCreate = async () => {
-    if (!branchId) {
+  const handleCreateClick = () => {
+    resetForm();
+    setDialogOpen(true);
+  };
+
+  const handleEditClick = (batch: DispatchBatch) => {
+    setEditingBatch(batch);
+    setScheduledAt(toLocalDateTimeInput(batch.scheduled_at));
+    setNotes(batch.notes ?? '');
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!editingBatch && !branchId) {
       notifyError('لطفاً شعبه را انتخاب کنید.');
       return;
     }
 
-    try {
-      await createDispatchBatch({
-        branch: Number(branchId),
-        scheduled_at: scheduledAt
-          ? new Date(scheduledAt).toISOString()
-          : null,
-        notes: notes.trim(),
-      }).unwrap();
+    const payload = {
+      scheduled_at: scheduledAt
+        ? new Date(scheduledAt).toISOString()
+        : null,
+      notes: notes.trim(),
+    };
 
-      notifySuccess('دسته ارسال با موفقیت ایجاد شد.');
+    try {
+      if (editingBatch) {
+        await updateDispatchBatch({
+          batchId: editingBatch.id,
+          ...payload,
+        }).unwrap();
+
+        notifySuccess('دسته ارسال با موفقیت ویرایش شد.');
+      } else {
+        await createDispatchBatch({
+          branch: Number(branchId),
+          ...payload,
+        }).unwrap();
+
+        notifySuccess('دسته ارسال با موفقیت ایجاد شد.');
+      }
+
       setDialogOpen(false);
       resetForm();
+    } catch (error) {
+      notifyError(getApiError(error).message);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await deleteDispatchBatch(deleteTarget.id).unwrap();
+
+      notifySuccess('دسته ارسال با موفقیت حذف شد.');
+      setDeleteTarget(null);
     } catch (error) {
       notifyError(getApiError(error).message);
     }
@@ -181,7 +263,7 @@ const DispatchBatchesPage = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => setDialogOpen(true)}
+          onClick={handleCreateClick}
         >
           ایجاد دسته ارسال
         </Button>
@@ -218,6 +300,23 @@ const DispatchBatchesPage = () => {
                 onClick: (batch) =>
                   navigate(`/dashboard/dispatch-batches/${batch.id}`),
               },
+              {
+                key: 'edit',
+                label: 'ویرایش دسته',
+                icon: <EditOutlinedIcon />,
+                onClick: handleEditClick,
+                hidden: (batch) =>
+                  !['draft', 'ready', 'assigned'].includes(batch.status),
+              },
+              {
+                key: 'delete',
+                label: 'حذف دسته',
+                icon: <DeleteOutlineIcon />,
+                onClick: setDeleteTarget,
+                hidden: (batch) =>
+                  batch.status !== 'draft' ||
+                  (batch.orders?.length ?? 0) > 0,
+              },
             ]}
           />
         </Stack>
@@ -230,32 +329,36 @@ const DispatchBatchesPage = () => {
         maxWidth="sm"
         dir="rtl"
       >
-        <DialogTitle>ایجاد دسته ارسال جدید</DialogTitle>
+        <DialogTitle>
+          {editingBatch ? 'ویرایش دسته ارسال' : 'ایجاد دسته ارسال جدید'}
+        </DialogTitle>
 
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <TextField
-              select
-              required
-              fullWidth
-              label="شعبه"
-              value={branchId}
-              disabled={branchesLoading || isCreating}
-              onChange={(event) => setBranchId(event.target.value)}
-            >
-              {(branchesData?.results ?? []).map((branch) => (
-                <MenuItem key={branch.id} value={String(branch.id)}>
-                  {branch.name} — {branch.city}
-                </MenuItem>
-              ))}
-            </TextField>
+            {!editingBatch && (
+              <TextField
+                select
+                required
+                fullWidth
+                label="شعبه"
+                value={branchId}
+                disabled={branchesLoading || isSaving}
+                onChange={(event) => setBranchId(event.target.value)}
+              >
+                {(branchesData?.results ?? []).map((branch) => (
+                  <MenuItem key={branch.id} value={String(branch.id)}>
+                    {branch.name} — {branch.city}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
 
             <TextField
               fullWidth
               type="datetime-local"
               label="زمان برنامه‌ریزی‌شده"
               value={scheduledAt}
-              disabled={isCreating}
+              disabled={isSaving}
               onChange={(event) => setScheduledAt(event.target.value)}
               slotProps={{
                 inputLabel: { shrink: true },
@@ -268,23 +371,70 @@ const DispatchBatchesPage = () => {
               minRows={3}
               label="توضیحات"
               value={notes}
-              disabled={isCreating}
+              disabled={isSaving}
               onChange={(event) => setNotes(event.target.value)}
             />
           </Stack>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleClose} disabled={isCreating}>
+          <Button onClick={handleClose} disabled={isSaving}>
             انصراف
           </Button>
 
           <Button
             variant="contained"
-            onClick={handleCreate}
-            disabled={isCreating || branchesLoading}
+            onClick={handleSave}
+            disabled={isSaving || (!editingBatch && branchesLoading)}
           >
-            {isCreating ? 'در حال ثبت...' : 'ایجاد دسته'}
+            {isSaving
+              ? 'در حال ذخیره...'
+              : editingBatch
+                ? 'ذخیره تغییرات'
+                : 'ایجاد دسته'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => {
+          if (!isDeleting) setDeleteTarget(null);
+        }}
+        fullWidth
+        maxWidth="xs"
+        dir="rtl"
+      >
+        <DialogTitle>حذف دسته ارسال</DialogTitle>
+
+        <DialogContent>
+          <Typography>
+            آیا از حذف دسته ارسال شماره{' '}
+            {deleteTarget
+              ? convertToPersianDigits(deleteTarget.id)
+              : ''}
+            {' '}اطمینان دارید؟
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            این عملیات قابل بازگشت نیست.
+          </Typography>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setDeleteTarget(null)}
+            disabled={isDeleting}
+          >
+            انصراف
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'در حال حذف...' : 'حذف دسته'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -300,6 +300,35 @@ export const dispatchApi = baseApi.injectEndpoints({
         { type: 'DispatchBatch', id: 'LIST' },
       ],
     }),
+    updateDispatchBatch: builder.mutation<
+      DispatchBatch,
+      {
+        batchId: number | string;
+        scheduled_at?: string | null;
+        notes?: string;
+      }
+    >({
+      query: ({ batchId, ...body }) => ({
+        url: `freight/api/v1/dispatch-batches/${batchId}/`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (_result, _error, { batchId }) => [
+        { type: 'DispatchBatch', id: batchId },
+        { type: 'DispatchBatch', id: 'LIST' },
+      ],
+    }),
+
+    deleteDispatchBatch: builder.mutation<void, number | string>({
+      query: (batchId) => ({
+        url: `freight/api/v1/dispatch-batches/${batchId}/`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, batchId) => [
+        { type: 'DispatchBatch', id: batchId },
+        { type: 'DispatchBatch', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -323,4 +352,6 @@ export const {
   useCancelDispatchBatchMutation,
   useCancelDispatchOrderMutation,
   useCancelDispatchAssignmentMutation,
+  useUpdateDispatchBatchMutation,
+  useDeleteDispatchBatchMutation,
 } = dispatchApi;
