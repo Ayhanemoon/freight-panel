@@ -32,7 +32,9 @@ import {
   useRemoveOrderFromDispatchBatchMutation,
   useAssignFreightCompanyMutation,
   useMakeDispatchBatchReadyMutation,
+  useAssignDispatcherMutation,
 } from 'features/freight/api/dispatchApi';
+import { useGetUsersQuery } from 'features/accounts/api/userApi';
 import { useGetShipmentOrdersQuery } from 'features/freight/api/shipmentOrderApi';
 import { useGetFreightCompaniesQuery } from 'features/freight/api/freightCompanyApi';
 import { DispatchOrder } from 'features/freight/types/dispatch';
@@ -130,6 +132,21 @@ const DispatchBatchDetailPage = () => {
 
   const [makeBatchReady, { isLoading: isMakingReady }] = useMakeDispatchBatchReadyMutation();
 
+  const [dispatcherId, setDispatcherId] = useState('');
+
+  const { data: usersData, isLoading: usersLoading } =
+    useGetUsersQuery({ page_size: 100 });
+
+  const [assignDispatcher, { isLoading: isAssigningDispatcher }] =
+    useAssignDispatcherMutation();
+
+  const eligibleDispatchers = (usersData?.results ?? []).filter(
+    (user) =>
+      user.is_active &&
+      user.roles?.includes('Dispatcher') &&
+      user.branch?.id === batch?.branch
+  );
+
   const handleAddOrder = async () => {
     if (!id || !selectedOrderId) {
       notifyError('لطفاً سفارش را انتخاب کنید.');
@@ -199,6 +216,30 @@ const DispatchBatchDetailPage = () => {
       await makeBatchReady(batch.id).unwrap();
 
       notifySuccess('دسته ارسال با موفقیت آماده شد.');
+    } catch (error) {
+      notifyError(getApiError(error).message);
+    }
+  };
+
+  const handleAssignDispatcher = async () => {
+    if (!batch || !dispatcherId) {
+      notifyError('لطفاً مسئول ارسال را انتخاب کنید.');
+      return;
+    }
+
+    if (batch.status !== 'ready') {
+      notifyError('تعیین مسئول ارسال فقط برای دسته آماده امکان‌پذیر است.');
+      return;
+    }
+
+    try {
+      await assignDispatcher({
+        batchId: batch.id,
+        dispatcher: Number(dispatcherId),
+      }).unwrap();
+
+      notifySuccess('مسئول ارسال با موفقیت تعیین شد.');
+      setDispatcherId('');
     } catch (error) {
       notifyError(getApiError(error).message);
     }
@@ -451,6 +492,53 @@ const DispatchBatchDetailPage = () => {
           />
         </Stack>
       </Paper>
+      {batch.status === 'ready' && (
+        <Paper sx={{ p: 3 }}>
+          <Stack spacing={2}>
+            <Typography variant="h6">تعیین مسئول ارسال</Typography>
+
+            {batch.dispatcher && (
+              <Typography color="text.secondary">
+                برای این دسته مسئول ارسال تعیین شده است.
+              </Typography>
+            )}
+
+            <TextField
+              select
+              fullWidth
+              label="مسئول ارسال"
+              value={dispatcherId}
+              onChange={(event) => setDispatcherId(event.target.value)}
+              disabled={usersLoading || isAssigningDispatcher}
+              helperText={
+                eligibleDispatchers.length
+                  ? 'فقط کاربران فعال با نقش مسئول ارسال در شعبه این دسته نمایش داده می‌شوند.'
+                  : 'کاربر فعالی با نقش مسئول ارسال در شعبه این دسته پیدا نشد.'
+              }
+            >
+              {eligibleDispatchers.map((user) => (
+                <MenuItem key={user.id} value={String(user.id)}>
+                  {user.mobile}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <Stack direction="row" justifyContent="flex-start">
+              <Button
+                variant="contained"
+                onClick={handleAssignDispatcher}
+                disabled={
+                  !dispatcherId ||
+                  usersLoading ||
+                  isAssigningDispatcher
+                }
+              >
+                {isAssigningDispatcher ? 'در حال ثبت...' : 'تعیین مسئول ارسال'}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      )}
       <Dialog
         open={Boolean(assignmentOrder)}
         onClose={() => {

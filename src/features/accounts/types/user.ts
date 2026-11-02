@@ -8,6 +8,7 @@ export interface User {
   mobile: string;
   email: string;
   branch: UserBranch | null;
+  roles: string[];
   is_active: boolean;
   is_mobile_verified: boolean;
   auth_provider: string;
