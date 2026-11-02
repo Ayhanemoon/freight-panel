@@ -509,7 +509,7 @@ const DispatchBatchDetailPage = () => {
               label="مسئول ارسال"
               value={dispatcherId}
               onChange={(event) => setDispatcherId(event.target.value)}
-              disabled={usersLoading || isAssigningDispatcher}
+              disabled={eligibleDispatchers.length == 0 || usersLoading || isAssigningDispatcher}
               helperText={
                 eligibleDispatchers.length
                   ? 'فقط کاربران فعال با نقش مسئول ارسال در شعبه این دسته نمایش داده می‌شوند.'
